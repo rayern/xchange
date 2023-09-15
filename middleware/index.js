@@ -1,9 +1,13 @@
-const admin = require('../config/firebase-config')
 const { User } = require('../models')
+const admin = require("firebase-admin")
+const serviceAccount = require("../config/firebase-service-account.json");
 
 class Middleware {
 	async authenticate(req, res, next) {
 		try {
+			admin.initializeApp({
+				credential: admin.credential.cert(serviceAccount)
+			});
 			const token = req.headers.authorization.split(" ")[1]
 			const decodeValue =  await admin.auth().verifyIdToken(token)
 			if (decodeValue) {
