@@ -1,10 +1,13 @@
-module.exports = (sequelize, DataTypes) => {
+export default (sequelize, DataTypes) => {
     const User = sequelize.define("User",{
         first_name: {
             type: DataTypes.STRING,
         },
         last_name: {
             type: DataTypes.STRING
+        },
+        role_id: {
+            type: DataTypes.INTEGER
         },
         firebase_id: {
             type: DataTypes.STRING,

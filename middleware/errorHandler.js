@@ -1,8 +1,8 @@
-const {customAPIError} = require('../errors/custom')
+import {CustomAPIError} from '../errors/custom.js'
 const errorHandler = (err, req,res,next) => {
-    if(err instanceof customAPIError){
+    if(err instanceof CustomAPIError){
         return res.status(err.statusCode).json({success: false, message:err.message})
     }
     return res.status(500).json({success: false, message:'Something went wrong, please try again later'})
 }
-module.exports = errorHandler
+export default errorHandler

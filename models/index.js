@@ -1,43 +1,32 @@
-'use strict';
+import dbJSON from "../config/database.json" assert { type: "json" };
+import { Sequelize, DataTypes } from "sequelize";
+import dotenv from "dotenv";
+import createUserModel from "./User.js";
+dotenv.config();
+const dbConfig = dbJSON[process.env.DATABASE]
 
-const fs = require('fs');
-const path = require('path');
-const Sequelize = require('sequelize');
-const process = require('process');
-const basename = path.basename(__filename);
-const env = process.env.NODE_ENV || 'development';
-const config = require(__dirname + '/../config/config.json')[env];
-const db = {};
-
-let sequelize;
-if (config.use_env_variable) {
-  sequelize = new Sequelize(process.env[config.use_env_variable], config);
-} else {
-  sequelize = new Sequelize(config.database, config.username, config.password, config);
-}
-
-fs
-  .readdirSync(__dirname)
-  .filter(file => {
-    return (
-      file.indexOf('.') !== 0 &&
-      file !== basename &&
-      file.slice(-3) === '.js' &&
-      file.indexOf('.test.js') === -1
-    );
-  })
-  .forEach(file => {
-    const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
-    db[model.name] = model;
-  });
-
-Object.keys(db).forEach(modelName => {
-  if (db[modelName].associate) {
-    db[modelName].associate(db);
-  }
+console.log(dbConfig)
+const sequelize = new Sequelize(dbConfig.database, dbConfig.username, dbConfig.password, {
+    host: dbConfig.host,
+    port: dbConfig.port,
+    dialect: dbConfig.dialect,
+    operatorsAliases: false
 });
 
-db.sequelize = sequelize;
-db.Sequelize = Sequelize;
+sequelize.authenticate().then(() => {
+    console.log('Database connected')
+}).catch(err => {
+    console.log('Database error: '+ err)
+})
 
-module.exports = db;
+const db = {}
+db.Sequelize = Sequelize
+db.sequelize = sequelize
+
+db.user = createUserModel(sequelize, DataTypes);
+
+db.sequelize.sync({force: false}).then(() => {
+    console.log('Sync is complete')
+})
+
+export default db
