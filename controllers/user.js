@@ -3,17 +3,16 @@ import db from "../models/index.js";
 import asyncWrapper from "../middleware/async.js";
 import { createCustomError } from "../errors/custom.js";
 import admin from "firebase-admin";
-import { createRequire } from "module";
-const require = createRequire(import.meta.url);
-const serviceAccount = require("../config/firebase-service-account.json");
+import dotenv from "dotenv";
 
+dotenv.config();
 export const login = asyncWrapper(async (req, res) => {
 	if (!admin.apps.length) {
+		const serviceAccount = JSON.parse(process.env.FIREBASE_CONFIG);
 		admin.initializeApp({
 			credential: admin.credential.cert(serviceAccount),
 		});
 	}
-	//const token = req.headers.authorization.split(" ")[1]
 	const { token } = req.body;
 	const decodeValue = await admin.auth().verifyIdToken(token);
 	if (decodeValue) {
@@ -68,19 +67,7 @@ export const signup = asyncWrapper(async (req, res) => {
 			role_id: role,
 			firebase_id: decodeValue.uid,
 		});
-		/*
-		const jwtToken = jwt.sign(
-			{ token: token, role: user.role_id },
-			process.env.JWT_SECRET,
-			{
-				expiresIn: "1h",
-			}
-		);*/
 		return res
-			/*.cookie("user", jwtToken, {
-				expires: new Date(Date.now() + 25892000000),
-				httpOnly: true,
-			})*/
 			.status(200)
 			.json({ success:true, data: user, message: "User signed up successfully" })
 	} else {

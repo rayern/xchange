@@ -1,16 +1,12 @@
 import { Sequelize, DataTypes } from "sequelize"
 import dotenv from "dotenv"
 import createUserModel from "./user.js"
-import { createRequire } from "module";
-const require = createRequire(import.meta.url);
-const dbJSON = require("../config/database.json");
 
 dotenv.config();
-const dbConfig = dbJSON[process.env.DATABASE]
-const sequelize = new Sequelize(dbConfig.database, dbConfig.username, dbConfig.password, {
-    host: dbConfig.host,
-    port: dbConfig.port,
-    dialect: dbConfig.dialect
+const sequelize = new Sequelize(process.env.DB_DATABASE, process.env.DB_USER, process.env.DB_PASSWORD, {
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    dialect: process.env.DB_DIALECT
 });
 
 sequelize.authenticate().then(() => {

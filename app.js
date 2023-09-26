@@ -8,7 +8,7 @@ import errorHandler from "./middleware/errorHandler.js";
 import cookieParser from "cookie-parser";
 
 dotenv.config();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.APP_PORT || 3000;
 const app = express();
 
 const whitelist = ["http://127.0.0.1:8080", "http://localhost:3000"];
