@@ -29,6 +29,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use("/user", userRoutes);
+app.get('/', (req,res) => {
+	res.send('Home')
+})
 app.use(notFound);
 app.use(errorHandler);
 
