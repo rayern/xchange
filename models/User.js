@@ -1,5 +1,5 @@
 export default (sequelize, DataTypes) => {
-    const User = sequelize.define("User",{
+    const User = sequelize.define("user",{
         first_name: {
             type: DataTypes.STRING,
         },

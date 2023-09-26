@@ -1,16 +1,16 @@
-import dbJSON from "../config/database.json" assert { type: "json" };
-import { Sequelize, DataTypes } from "sequelize";
-import dotenv from "dotenv";
-import createUserModel from "./User.js";
+import { Sequelize, DataTypes } from "sequelize"
+import dotenv from "dotenv"
+import createUserModel from "./user.js"
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const dbJSON = require("../config/database.json");
+
 dotenv.config();
 const dbConfig = dbJSON[process.env.DATABASE]
-
-console.log(dbConfig)
 const sequelize = new Sequelize(dbConfig.database, dbConfig.username, dbConfig.password, {
     host: dbConfig.host,
     port: dbConfig.port,
-    dialect: dbConfig.dialect,
-    operatorsAliases: false
+    dialect: dbConfig.dialect
 });
 
 sequelize.authenticate().then(() => {

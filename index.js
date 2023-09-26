@@ -11,9 +11,12 @@ dotenv.config();
 const PORT = process.env.PORT || 3000;
 const app = express();
 
-const whitelist = ["http://127.0.0.1:8080"];
+const whitelist = ["http://127.0.0.1:8080", "http://localhost:3000"];
 const corsOptions = {
 	origin: function (origin, callback) {
+		if (!origin) {
+			return callback(null, true);
+		}
 		if (whitelist.indexof(origin) !== -1) {
 			callback(null, true);
 		} else {

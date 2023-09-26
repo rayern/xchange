@@ -6,5 +6,5 @@ export class CustomAPIError extends Error{
 }
 
 export const createCustomError = (message,statusCode) => {
-    return new CustomAPIError(message,statusCode)
+    throw new CustomAPIError(message,statusCode)
 }
