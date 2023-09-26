@@ -7,10 +7,10 @@
   "scripts": {
     "dev": "nodemon app.js",
     "build": "npm run clean && npm run build-babel",
-    "start": "node src/app.js",
+    "start": "npm run build && node ./build/app.js",
     "clean": "rm -rf build && mkdir build",
     "build-babel": "babel -d ./build ./src -s",
-    "heroku-postbuild": "npm run build"
+    "heroku-postbuild": "npm install && npm run build"
   },
   "keywords": [],
   "author": "",
