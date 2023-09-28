@@ -1,13 +1,10 @@
 export default (sequelize, DataTypes) => {
-    const User = sequelize.define("user",{
+    const User = sequelize.define("users",{
         first_name: {
             type: DataTypes.STRING,
         },
         last_name: {
             type: DataTypes.STRING
-        },
-        role_id: {
-            type: DataTypes.INTEGER
         },
         firebase_id: {
             type: DataTypes.STRING,
@@ -36,6 +33,8 @@ export default (sequelize, DataTypes) => {
         last_login: {
             type: DataTypes.DATE
         }
+    },{
+        underscored: true
     })
     return User
 }
