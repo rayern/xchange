@@ -6,6 +6,9 @@ export default (sequelize, DataTypes) => {
         ip_address: {
             type: DataTypes.STRING
         },
+        request: {
+            type: DataTypes.TEXT
+        },
         message: {
             type: DataTypes.TEXT
         },
