@@ -1,14 +1,8 @@
 import APIError from "../errors/apiError.js"
 import AuthError from "../errors/authError.js"
 import db from "../models/index.js"
-
+import logger from "../helpers/logger.js"
 const errorHandler = async (err, req, res, next) => {
-	console.log(err)
-	if (err instanceof APIError) {
-		return res
-			.status(err.statusCode)
-			.json({ success: false, message: err.message })
-	}
 	if (err instanceof AuthError) {
 		await db.log.create({
 			user_id: req.user?.id,
@@ -24,6 +18,15 @@ const errorHandler = async (err, req, res, next) => {
 			.status(err.statusCode)
 			.json({ success: false, message: err.message })
 	}
+	else{
+		logger.error(JSON.stringify({error: err.message, api: req.originalUrl, request: req.body,}))
+		if (err instanceof APIError) {
+			return res
+				.status(err.statusCode)
+				.json({ success: false, message: err.message })
+		}
+	}
+
 	return res
 		.status(200)
 		.json({
