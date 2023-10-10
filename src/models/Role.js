@@ -1,16 +1,16 @@
-export default (sequelize, DataTypes) => {
-    const Role = sequelize.define("roles",{
+import BaseModel from "../helpers/BaseModel.js"
+
+class Role extends BaseModel{
+    static table = 'users'
+    static fields = {
         name: {
-            type: DataTypes.STRING,
+            type: 'VARCHAR(255)',
+            insert: true
         },
         is_active: {
-            type: DataTypes.BOOLEAN,
+            type: 'TINY_INT(1)',
             allowNull: false,
             defaultValue: true 
-        },
-    },
-    {
-        underscored: true
-    })
-    return Role
+        }
+    }
 }

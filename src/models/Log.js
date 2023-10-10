@@ -1,23 +1,25 @@
-export default (sequelize, DataTypes) => {
-    const Log = sequelize.define("logs",{
+import BaseModel from "../helpers/BaseModel.js"
+
+class Log extends BaseModel{
+    table = 'logs'
+    fields = {
         api_endpoint: {
-            type: DataTypes.STRING
+            type: 'VARCHAR(255)',
+            insert: true
         },
         ip_address: {
-            type: DataTypes.STRING
+            type: 'VARCHAR(255)',
         },
         request: {
-            type: DataTypes.TEXT
+            type: 'TEXT',
         },
         message: {
-            type: DataTypes.TEXT
+            type: 'TEXT',
         },
         details: {
-            type: DataTypes.TEXT,
-        },
-    },{
-        underscored: true
-    })
-    return Log
+            type: 'TEXT',
+        }
+    }
 }
 
+export default new Log

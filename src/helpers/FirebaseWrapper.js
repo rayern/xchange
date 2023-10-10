@@ -1,6 +1,6 @@
 import admin from "firebase-admin"
 import dotenv from "dotenv"
-import AuthError from "../errors/authError.js"
+import AuthError from "../errors/AuthError.js"
 
 dotenv.config()
 class FirebaseWrapper {

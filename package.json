@@ -5,7 +5,7 @@
   "main": "app.js",
   "type": "module",
   "scripts": {
-    "dev": "nodemon src/app.js",
+    "dev": "npx nodemon src/app.js",
     "build": "npm run clean && npm run build-babel",
     "start": "npm run build && node ./build/app.js",
     "clean": "rm -rf build && mkdir build",
@@ -25,14 +25,9 @@
     "express": "^4.18.2",
     "express-async-errors": "^3.1.1",
     "firebase-admin": "^11.10.1",
-    "fs": "^0.0.1-security",
     "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",
     "mysql2": "^3.6.1",
-    "nodemon": "^3.0.1",
-    "path": "^0.12.7",
-    "sequelize": "^6.33.0",
-    "sequelize-cli": "^6.6.1",
     "winston": "^3.10.0",
     "winston-daily-rotate-file": "^4.7.1"
   },

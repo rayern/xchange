@@ -1,6 +1,6 @@
-import db from "../models/index.js"
+import User from "../models/user.js"
 import jwt from "jsonwebtoken"
-import AuthError from "../errors/authError.js"
+import AuthError from "../errors/AuthError.js"
 import dotenv from "dotenv"
 import asyncWrapper from "../middleware/async.js"
 import FirebaseWrapper from "../helpers/FirebaseWrapper.js"
@@ -13,7 +13,7 @@ const auth = asyncWrapper(async (req, res, next) => {
 	const { token, role } = jwt.verify(req.cookies[process.env.AUTH_COOKIE_NAME], process.env.JWT_SECRET)
 	const firebase = new FirebaseWrapper
 	const firebaseData = await firebase.verifyToken(token)
-	req.user = await db.user.findOne({
+	req.user = await User.findOne({
 		where: { firebase_id: firebaseData.id },
 	})
 	if (req.user == null) {
