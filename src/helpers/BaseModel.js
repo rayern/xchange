@@ -2,12 +2,12 @@ import pool from './pool.js'
 import {rtrim} from './utils.js'
 
 class BaseModel{
-    #database = {
+    database = {
         params: []
     }
     async runSQL(sql){
-        const [rows] = await pool.query(sql, this.#database.params)
-        this.#database.params = []
+        const [rows] = await pool.query(sql, this.database.params)
+        this.database.params = []
         return rows
     }
     decodeWhere(where){
@@ -20,47 +20,47 @@ class BaseModel{
                         switch(operator){
                             case 'lt': 
                                 whereStr += key + ' < ?,'
-                                this.#database.params.push(where[key][operator])
+                                this.database.params.push(where[key][operator])
                             break;
                             case 'gt': 
                                 whereStr += key + ' > ?,'
-                                this.#database.params.push(where[key][operator])
+                                this.database.params.push(where[key][operator])
                             break;
                             case 'lte': 
                                 whereStr += key + ' <= ?,'
-                                this.#database.params.push(where[key][operator])
+                                this.database.params.push(where[key][operator])
                             break;
                             case 'gte': 
                                 whereStr += key + ' >= ?,'
-                                this.#database.params.push(where[key][operator])
+                                this.database.params.push(where[key][operator])
                             break;
                             case 'like': 
                                 whereStr += key + ' like ?,'
-                                this.#database.params.push(where[key][operator])
+                                this.database.params.push(where[key][operator])
                             break;
                             case 'contains': 
                                 whereStr += key + ' like %?%,'
-                                this.#database.params.push(where[key][operator])
+                                this.database.params.push(where[key][operator])
                             break;
                             case 'startsWith': 
                                 whereStr += key + ' like ?%,'
-                                this.#database.params.push(where[key][operator])
+                                this.database.params.push(where[key][operator])
                             break;
                             case 'endsWith': 
                                 whereStr += key + ' like %?,'
-                                this.#database.params.push(where[key][operator])
+                                this.database.params.push(where[key][operator])
                             break;
                             case 'between': 
                                 whereStr += key + ' between ? and ?,'
-                                this.#database.params.push(where[key][operator][0])
-                                this.#database.params.push(where[key][operator][1])
+                                this.database.params.push(where[key][operator][0])
+                                this.database.params.push(where[key][operator][1])
                             break;
                         }
                     }
                 }
                 else{
                     whereStr += key + ' = ?,'
-                    this.#database.params.push(where[key])
+                    this.database.params.push(where[key])
                 }
             }
         }
@@ -79,7 +79,7 @@ class BaseModel{
         if(group != ''){
             groupStr = ' GROUP BY ' + group
         }
-        const rows = await this.runSQL(`SELECT ${select} FROM ${this.#database.table}${whereStr}${groupStr}${orderStr};`)
+        const rows = await this.runSQL(`SELECT ${select} FROM ${this.database.table}${whereStr}${groupStr}${orderStr};`)
         return rows
     }
 
@@ -102,15 +102,15 @@ class BaseModel{
             columns += key
             values += '?'
         }
-        this.#database.params = Object.values(props)
-        const rows = await this.runSQL(`INSERT INTO ${this.#database.table} (${columns}) VALUES (${values})`) 
+        this.database.params = Object.values(props)
+        const rows = await this.runSQL(`INSERT INTO ${this.database.table} (${columns}) VALUES (${values})`) 
         return rows.insertId
     }
 
     async delete({where}){
         const {whereStr} = decodeWhere(where)
         if(whereStr){
-            const rows = await this.runSQL(`DELETE FROM ${this.#database.table}${whereStr}`)
+            const rows = await this.runSQL(`DELETE FROM ${this.database.table}${whereStr}`)
         }
         return rows
     }
@@ -122,22 +122,22 @@ class BaseModel{
                 values += ','
             }
             values += key + ' = ?'
-            this.#database.params.push(props[key])
+            this.database.params.push(props[key])
         }
         const {whereStr} = decodeWhere(where)
-        const rows = await this.runSQL(`UPDATE ${this.#database.table} SET ${values}${whereStr}`)
+        const rows = await this.runSQL(`UPDATE ${this.database.table} SET ${values}${whereStr}`)
         return rows.affectedRows
     }
 
     async callProcedure(name, params){
-        this.#database.params = params
+        this.database.params = params
         const binds = Array.from({ length: params.length }, () => '?').join(',');
         const response = await this.runSQL(`CALL ${name}(${binds})`)
         return response?.[0]?.[0] || (response?.affectedRows > 0);
     }
     
     getDatabase() {
-        return this.#database;
+        return this.database;
     }
 }
 
