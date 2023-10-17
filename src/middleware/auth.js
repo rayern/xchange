@@ -1,4 +1,4 @@
-import User from "../models/user.js"
+import User from "../models/User.js"
 import jwt from "jsonwebtoken"
 import AuthError from "../errors/AuthError.js"
 import dotenv from "dotenv"
