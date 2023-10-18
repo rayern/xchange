@@ -25,6 +25,7 @@ export const login = asyncWrapper(async (req, res) => {
 		if (user.first_login === null) user.first_login = new Date()
 		user.last_login = new Date()
 		user.save()
+		delete user.database
 		return res
 			.cookie(process.env.AUTH_COOKIE_NAME, jwtToken, {
 				expires: new Date(Date.now() + 25892000000),
