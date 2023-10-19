@@ -1,6 +1,5 @@
 import express from "express"
 import cors from "cors"
-import "express-async-errors"
 import dotenv from "dotenv"
 import userRoutes from "./routes/user.js"
 import notFound from "./middleware/notFound.js"
@@ -24,7 +23,9 @@ const corsOptions = {
 		}
 	},
 }
-app.use(cors());
+app.use(cors({
+    origin: '*'
+}));
 //app.use(cors(corsOptions))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
