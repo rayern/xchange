@@ -3,10 +3,9 @@ import User from "../models/User.js"
 import asyncWrapper from "../middleware/async.js"
 import APIError from "../errors/APIError.js"
 import AuthError from "../errors/AuthError.js"
-import dotenv from "dotenv"
+import "dotenv/config"
 import FirebaseWrapper from "../helpers/FirebaseWrapper.js"
 
-dotenv.config()
 export const login = asyncWrapper(async (req, res) => {
 	const { token } = req.body
 	const firebase = new FirebaseWrapper

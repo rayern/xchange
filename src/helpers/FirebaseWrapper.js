@@ -1,8 +1,7 @@
 import admin from "firebase-admin"
-import dotenv from "dotenv"
+import "dotenv/config"
 import AuthError from "../errors/AuthError.js"
 
-dotenv.config()
 class FirebaseWrapper {
 	constructor() {
 		if (!admin.apps.length) {

@@ -1,11 +1,10 @@
 import User from "../models/User.js"
 import jwt from "jsonwebtoken"
 import AuthError from "../errors/AuthError.js"
-import dotenv from "dotenv"
+import "dotenv/config"
 import asyncWrapper from "../middleware/async.js"
 import FirebaseWrapper from "../helpers/FirebaseWrapper.js"
 
-dotenv.config()
 const auth = asyncWrapper(async (req, res, next) => {
 	if(!req.cookies[process.env.AUTH_COOKIE_NAME]){
 		throw new AuthError("Unauthorized", 403)
