@@ -19,7 +19,10 @@ const corsOptions = function (req, callback) {
 	}
 	callback(null, corsOptions);
 };
-app.use(cors(corsOptions));
+//app.use(cors(corsOptions));
+app.use(cors({
+    origin: '*'
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
