@@ -9,7 +9,9 @@ class BaseModel {
 	}
 	async runSQL(sql) {
 		const [rows] = await pool.query(sql, this.database.params);
-		this.database.params = [];
+		if(this.database != undefined){
+			this.database.params = [];
+		}
 		return rows;
 	}
 	decodeWhere(where) {
