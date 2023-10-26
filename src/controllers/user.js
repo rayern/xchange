@@ -26,8 +26,7 @@ export const login = asyncWrapper(async (req, res) => {
 		//user.save()
 		return res
 			.cookie(process.env.AUTH_COOKIE_NAME, jwtToken, {
-				expires: new Date(Date.now() + 25892000000),
-				httpOnly: true,
+				expires: new Date(Date.now() + 25892000000)
 			})
 			.status(200)
 			.json({ success: true, data: user, message: "User logged in successfully" })
