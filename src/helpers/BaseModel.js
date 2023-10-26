@@ -2,18 +2,13 @@ import pool from "./pool.js";
 import { rtrim } from "./utils.js";
 
 class BaseModel {
-	constructor() {
-		this.db = {
-			params: [],
-		};
-	}
-	async runSQL(sql) {
-		const [rows] = await pool.query(sql, this.db.params);
-		this.db.params = [];
+	async runSQL(sql, params) {
+		const [rows] = await pool.query(sql, params);
 		return rows;
 	}
 	decodeWhere(where) {
 		let whereStr = "";
+		let params = []
 		if (where != "") {
 			whereStr = " WHERE ";
 			for (const key in where) {
@@ -22,42 +17,42 @@ class BaseModel {
 						switch (operator) {
 							case "lt":
 								whereStr += key + " < ?,";
-								this.db.params.push(where[key][operator]);
+								params.push(where[key][operator]);
 								break;
 							case "gt":
 								whereStr += key + " > ?,";
-								this.db.params.push(where[key][operator]);
+								params.push(where[key][operator]);
 								break;
 							case "lte":
 								whereStr += key + " <= ?,";
-								this.db.params.push(where[key][operator]);
+								params.push(where[key][operator]);
 								break;
 							case "gte":
 								whereStr += key + " >= ?,";
-								this.db.params.push(where[key][operator]);
+								params.push(where[key][operator]);
 								break;
 							case "like":
 								whereStr += key + " like ?,";
-								this.db.params.push(where[key][operator]);
+								params.push(where[key][operator]);
 								break;
 							case "contains":
 								whereStr += key + " like %?%,";
-								this.db.params.push(where[key][operator]);
+								params.push(where[key][operator]);
 								break;
 							case "startsWith":
 								whereStr += key + " like ?%,";
-								this.db.params.push(where[key][operator]);
+								params.push(where[key][operator]);
 								break;
 							case "endsWith":
 								whereStr += key + " like %?,";
-								this.db.params.push(where[key][operator]);
+								params.push(where[key][operator]);
 								break;
 							case "between":
 								whereStr += key + " between ? and ?,";
-								this.db.params.push(
+								params.push(
 									where[key][operator][0]
 								);
-								this.db.params.push(
+								params.push(
 									where[key][operator][1]
 								);
 								break;
@@ -65,19 +60,19 @@ class BaseModel {
 					}
 				} else {
 					whereStr += key + " = ?,";
-					this.db.params.push(where[key]);
+					params.push(where[key]);
 				}
 			}
 		} else {
 			whereStr = where;
 		}
-		return rtrim(whereStr, ",");
+		return {whereStr: rtrim(whereStr, ","), params};
 	}
 
 	async find({ select = "*", where = "", group = "", order = "" }) {
 		const orderStr = "",
 			groupStr = "";
-		const whereStr = this.decodeWhere(where);
+		const {whereStr, params} = this.decodeWhere(where);
 		if (order != "") {
 			orderStr = " ORDER BY " + order;
 		}
@@ -85,7 +80,7 @@ class BaseModel {
 			groupStr = " GROUP BY " + group;
 		}
 		const rows = await this.runSQL(
-			`SELECT ${select} FROM ${this.db.table}${whereStr}${groupStr}${orderStr};`
+			`SELECT ${select} FROM ${this.table}${whereStr}${groupStr}${orderStr};`, params
 		);
 		return rows;
 	}
@@ -110,18 +105,17 @@ class BaseModel {
 			columns += key;
 			values += "?";
 		}
-		this.db.params = Object.values(props);
 		const rows = await this.runSQL(
-			`INSERT INTO ${this.db.table} (${columns}) VALUES (${values})`
+			`INSERT INTO ${this.table} (${columns}) VALUES (${values})`, Object.values(props)
 		);
 		return rows.insertId;
 	}
 
 	async delete({ where }) {
-		const { whereStr } = decodeWhere(where);
+		const { whereStr, params } = decodeWhere(where);
 		if (whereStr) {
 			const rows = await this.runSQL(
-				`DELETE FROM ${this.db.table}${whereStr}`
+				`DELETE FROM ${this.table}${whereStr}`, params
 			);
 		}
 		return rows;
@@ -129,26 +123,26 @@ class BaseModel {
 
 	async update(props, { where }) {
 		let values = "";
+		let parameters = []
 		for (const key in props) {
 			if (values != "") {
 				values += ",";
 			}
 			values += key + " = ?";
-			this.db.params.push(props[key]);
+			parameters.push(props[key]);
 		}
-		const { whereStr } = decodeWhere(where);
+		const { whereStr, params } = decodeWhere(where);
 		const rows = await this.runSQL(
-			`UPDATE ${this.db.table} SET ${values}${whereStr}`
+			`UPDATE ${this.table} SET ${values}${whereStr}`, [...parameters,...params]
 		);
 		return rows.affectedRows;
 	}
 
 	async callProcedure(name, params) {
-		this.db.params = params;
 		const binds = Array.from({ length: params.length }, () => "?").join(
 			","
 		);
-		const response = await this.runSQL(`CALL ${name}(${binds})`);
+		const response = await this.runSQL(`CALL ${name}(${binds})`, params);
 		if (response && response[0] && response[0][0]) {
 			return response[0][0];
 		} else if (response && response.affectedRows > 0) {

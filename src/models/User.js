@@ -3,52 +3,8 @@ import BaseModel from "../helpers/BaseModel.js";
 
 class User extends BaseModel {
 	constructor() {
-		super();
-		(this.db.table = "users"),
-			(this.db.fields = {
-				first_name: {
-					type: "VARCHAR(255)",
-					insert: true,
-				},
-				last_name: {
-					type: "VARCHAR(255)",
-					insert: true,
-				},
-				firebase_id: {
-					type: "VARCHAR(255)",
-					allowNull: false,
-					insert: true,
-					unique: true,
-					validate: {
-						notEmpty: true,
-					},
-				},
-				email: {
-					type: "VARCHAR(255)",
-					allowNull: false,
-					insert: true,
-					unique: true,
-					validate: {
-						notEmpty: true,
-					},
-				},
-				is_active: {
-					type: "TINY_INT(1)",
-					allowNull: false,
-					defaultValue: true,
-				},
-				first_login: {
-					type: "DATETIME",
-				},
-				last_login: {
-					type: "DATETIME",
-				},
-			});
-		this.db.relations = {
-			role_id: {
-				type: "belongsTo",
-			},
-		};
+		super()
+		this.table = "users"
 	}
 
 	static async role() {
