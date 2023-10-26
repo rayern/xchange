@@ -2,6 +2,7 @@ import pool from "./pool.js";
 import { rtrim } from "./utils.js";
 
 class BaseModel {
+	database
 	constructor() {
 		this.database = {
 			params: [],
