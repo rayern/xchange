@@ -1,11 +1,11 @@
 import APIError from "../errors/APIError.js";
 import BaseModel from "../helpers/BaseModel.js";
- 
+
 class User extends BaseModel {
 	constructor() {
 		super();
-		(this.database.table = "users"),
-			(this.database.fields = {
+		(this.db.table = "users"),
+			(this.db.fields = {
 				first_name: {
 					type: "VARCHAR(255)",
 					insert: true,
@@ -44,7 +44,7 @@ class User extends BaseModel {
 					type: "DATETIME",
 				},
 			});
-		this.database.relations = {
+		this.db.relations = {
 			role_id: {
 				type: "belongsTo",
 			},
@@ -57,15 +57,15 @@ class User extends BaseModel {
 
 	static getFields({ type = false, variable = false }) {
 		let fieldStr = "";
-		for (const key in this.database.fields) {
-			if (this.database.fields[key].insert == true) {
+		for (const key in this.db.fields) {
+			if (this.db.fields[key].insert == true) {
 				if (fieldStr != "") {
 					fieldStr += ",";
 				}
 				field = variable ? "p_" + key : key;
 				fieldStr += field;
 				if (type) {
-					fieldStr += " " + this.database.fields[key].type;
+					fieldStr += " " + this.db.fields[key].type;
 				}
 			}
 		}
@@ -86,7 +86,7 @@ class User extends BaseModel {
 			} WHERE firebase_id = firebase_id) THEN 
             BEGIN
                 INSERT INTO ${
-					this.database.table
+					this.db.table
 				}(${this.getFields()}) VALUES (${this.getFields({
 			variable: true,
 		})});
@@ -154,7 +154,7 @@ class User extends BaseModel {
 	async save() {
 		const newProperties = {};
 		for (const key in this) {
-			if (key !== "database" && this.hasOwnProperty(key)) {
+			if (key !== "db" && this.hasOwnProperty(key)) {
 				newProperties[key] = this[key];
 			}
 		}

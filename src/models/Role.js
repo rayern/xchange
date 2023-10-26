@@ -3,8 +3,8 @@ import BaseModel from "../helpers/BaseModel.js";
 class Role extends BaseModel {
 	constructor() {
 		super();
-		this.database.table = "roles";
-		this.database.fields = {
+		this.db.table = "roles";
+		this.db.fields = {
 			name: {
 				type: "VARCHAR(255)",
 				insert: true,

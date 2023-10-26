@@ -2,17 +2,14 @@ import pool from "./pool.js";
 import { rtrim } from "./utils.js";
 
 class BaseModel {
-	database
 	constructor() {
-		this.database = {
+		this.db = {
 			params: [],
 		};
 	}
 	async runSQL(sql) {
-		const [rows] = await pool.query(sql, this.database.params);
-		if(this.database != undefined){
-			this.database.params = [];
-		}
+		const [rows] = await pool.query(sql, this.db.params);
+		this.db.params = [];
 		return rows;
 	}
 	decodeWhere(where) {
@@ -25,42 +22,42 @@ class BaseModel {
 						switch (operator) {
 							case "lt":
 								whereStr += key + " < ?,";
-								this.database.params.push(where[key][operator]);
+								this.db.params.push(where[key][operator]);
 								break;
 							case "gt":
 								whereStr += key + " > ?,";
-								this.database.params.push(where[key][operator]);
+								this.db.params.push(where[key][operator]);
 								break;
 							case "lte":
 								whereStr += key + " <= ?,";
-								this.database.params.push(where[key][operator]);
+								this.db.params.push(where[key][operator]);
 								break;
 							case "gte":
 								whereStr += key + " >= ?,";
-								this.database.params.push(where[key][operator]);
+								this.db.params.push(where[key][operator]);
 								break;
 							case "like":
 								whereStr += key + " like ?,";
-								this.database.params.push(where[key][operator]);
+								this.db.params.push(where[key][operator]);
 								break;
 							case "contains":
 								whereStr += key + " like %?%,";
-								this.database.params.push(where[key][operator]);
+								this.db.params.push(where[key][operator]);
 								break;
 							case "startsWith":
 								whereStr += key + " like ?%,";
-								this.database.params.push(where[key][operator]);
+								this.db.params.push(where[key][operator]);
 								break;
 							case "endsWith":
 								whereStr += key + " like %?,";
-								this.database.params.push(where[key][operator]);
+								this.db.params.push(where[key][operator]);
 								break;
 							case "between":
 								whereStr += key + " between ? and ?,";
-								this.database.params.push(
+								this.db.params.push(
 									where[key][operator][0]
 								);
-								this.database.params.push(
+								this.db.params.push(
 									where[key][operator][1]
 								);
 								break;
@@ -68,7 +65,7 @@ class BaseModel {
 					}
 				} else {
 					whereStr += key + " = ?,";
-					this.database.params.push(where[key]);
+					this.db.params.push(where[key]);
 				}
 			}
 		} else {
@@ -88,7 +85,7 @@ class BaseModel {
 			groupStr = " GROUP BY " + group;
 		}
 		const rows = await this.runSQL(
-			`SELECT ${select} FROM ${this.database.table}${whereStr}${groupStr}${orderStr};`
+			`SELECT ${select} FROM ${this.db.table}${whereStr}${groupStr}${orderStr};`
 		);
 		return rows;
 	}
@@ -113,9 +110,9 @@ class BaseModel {
 			columns += key;
 			values += "?";
 		}
-		this.database.params = Object.values(props);
+		this.db.params = Object.values(props);
 		const rows = await this.runSQL(
-			`INSERT INTO ${this.database.table} (${columns}) VALUES (${values})`
+			`INSERT INTO ${this.db.table} (${columns}) VALUES (${values})`
 		);
 		return rows.insertId;
 	}
@@ -124,7 +121,7 @@ class BaseModel {
 		const { whereStr } = decodeWhere(where);
 		if (whereStr) {
 			const rows = await this.runSQL(
-				`DELETE FROM ${this.database.table}${whereStr}`
+				`DELETE FROM ${this.db.table}${whereStr}`
 			);
 		}
 		return rows;
@@ -137,17 +134,17 @@ class BaseModel {
 				values += ",";
 			}
 			values += key + " = ?";
-			this.database.params.push(props[key]);
+			this.db.params.push(props[key]);
 		}
 		const { whereStr } = decodeWhere(where);
 		const rows = await this.runSQL(
-			`UPDATE ${this.database.table} SET ${values}${whereStr}`
+			`UPDATE ${this.db.table} SET ${values}${whereStr}`
 		);
 		return rows.affectedRows;
 	}
 
 	async callProcedure(name, params) {
-		this.database.params = params;
+		this.db.params = params;
 		const binds = Array.from({ length: params.length }, () => "?").join(
 			","
 		);
@@ -162,7 +159,7 @@ class BaseModel {
 	}
 
 	getDatabase() {
-		return this.database;
+		return this.db;
 	}
 }
 
