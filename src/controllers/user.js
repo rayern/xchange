@@ -6,9 +6,9 @@ import AuthError from "../errors/AuthError.js"
 import "dotenv/config"
 import FirebaseWrapper from "../helpers/FirebaseWrapper.js"
 
+const firebase = new FirebaseWrapper
 export const login = asyncWrapper(async (req, res) => {
 	const { token } = req.body
-	const firebase = new FirebaseWrapper
 	const firebaseData = await firebase.verifyToken(token)
 	const user = await User.findOne({
 		where: { firebase_id: firebaseData.id },
@@ -39,7 +39,6 @@ export const login = asyncWrapper(async (req, res) => {
 
 export const signup = asyncWrapper(async (req, res) => {
 	const { firstName, lastName, role, token } = req.body
-	const firebase = new FirebaseWrapper
 	const firebaseData = await firebase.verifyToken(token)
 	let user = await User.findOne({
 		where: { firebase_id: firebaseData.id },
@@ -57,6 +56,13 @@ export const signup = asyncWrapper(async (req, res) => {
 	return res
 		.status(200)
 		.json({ success:true, data: user, message: "User signed up successfully" })
+})
+
+export const sendPasswordResetLink = asyncWrapper(async (req, res) => {
+	const link = await firebase.sendPasswordResetLink(req.body.email)
+	return res
+		.status(200)
+		.json({ sucess: true, data: req.user, message: "Password reset email sent successfully" })
 })
 
 export const profile = asyncWrapper(async (req, res) => {
