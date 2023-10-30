@@ -30,25 +30,30 @@ class FirebaseWrapper {
 
 	async sendPasswordResetLink(email) {
 		try {
-			const userRecord = await auth.getUserByEmail(email);
+			const userRecord = await admin.auth().getUserByEmail(email);
 			const uid = userRecord.uid;
-
-			const actionCodeSettings = {
-				url: process.env.APP_URL + "/reset-password",
-				handleCodeInApp: true,
-			};
-			const link = await auth.generatePasswordResetLink(
-				email,
-				actionCodeSettings
-			);
-			console.log(link)
-		} catch (error) {
-			console.error(
-				"Password reset for user not found with email: ",
+			const link = await admin.auth().generatePasswordResetLink(
 				email
 			);
+			console.log(link)
+			return {uid, link}
+		} catch (error) {
+			console.log(error)
+			return false
 		}
 	}
+
+	async resetPassword(uid, password) {
+		try {
+		  await admin.auth().updateUser(uid, {
+			password: password,
+		  });
+		  return true
+		} catch (error) {
+		  console.error('Error:', error);
+		  return false
+		}
+	  }
 }
 
 export default FirebaseWrapper;
