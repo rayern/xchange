@@ -10,8 +10,8 @@ import { sendEmail } from "../helpers/Emailer.js";
 import { encrypt, decrypt } from "../helpers/Encryptor.js";
 
 const firebase = new FirebaseWrapper();
-const userModel = new User()
-const passwordReset = new PasswordReset()
+const userModel = new User();
+const passwordReset = new PasswordReset();
 export const login = asyncWrapper(async (req, res) => {
 	const { token } = req.body;
 	const firebaseData = await firebase.verifyToken(token);
@@ -62,54 +62,70 @@ export const signup = asyncWrapper(async (req, res) => {
 		role_id: role,
 		firebase_id: firebaseData.id,
 	});
-	return res
-		.status(200)
-		.json({
-			success: true,
-			data: user,
-			message: "User signed up successfully",
-		});
+	return res.status(200).json({
+		success: true,
+		data: user,
+		message: "User signed up successfully",
+	});
 });
 
 export const sendPasswordResetLink = asyncWrapper(async (req, res) => {
 	const uid = await firebase.getID(req.body.email);
 	if (uid) {
-		const extendedLink = process.env.APP_URL + "/PasswordReset?code=" + encrypt(uid);
+		const code = JSON.stringify({ email: req.body.email });
+		const extendedLink =
+			process.env.APP_URL + "/PasswordReset?code=" + encrypt(code);
 		const text =
 			"Please click on the link below to reset your password.<br><br>" +
 			extendedLink;
 		sendEmail(req.body.email, "Password Reset", text);
 	}
-	return res
-		.status(200)
-		.json({
-			sucess: true,
-			message: "Password reset email sent successfully",
-		});
+	return res.status(200).json({
+		sucess: true,
+		message: "Password reset email sent successfully",
+	});
+});
+
+export const validateCode = asyncWrapper(async (req, res) => {
+	try {
+		const { email } = JSON.parse(decrypt(req.params.code));
+		const uid = await firebase.getID(email);
+		if (uid) {
+			return res.status(200).json({
+				sucess: true,
+				message: "Reset code validated successfully",
+			});
+		} else {
+			throw new APIError("Reset Code is invalid", 403);
+		}
+	} catch (error) {
+		throw new APIError("Reset Code is invalid", 403);
+	}
 });
 
 export const resetPassword = asyncWrapper(async (req, res) => {
-	const uid = decrypt(req.body.code)
-	const status = await firebase.resetPassword(
-		uid,
-		req.body.password,
-	);
-	if (!status) {
-		throw new APIError("Something went wrong. Please try again", 400);
+	try {
+		const { email } = JSON.parse(decrypt(req.body.code));
+		const uid = await firebase.getID(email);
+		if (uid) {
+			const status = await firebase.resetPassword(uid, req.body.password);
+			if (!status) {
+				throw new APIError(
+					"Something went wrong. Please try again",
+					400
+				);
+			}
+			return res
+				.status(200)
+				.json({ sucess: true, message: "Password reset successfully" });
+		}
+		else{
+			throw new APIError("Reset Code is invalid", 403);
+		}
+	} catch (error) {
+		console.log(error)
+		throw new APIError("Reset Code is invalid", 403);
 	}
-	return res
-		.status(200)
-		.json({ sucess: true, message: "Password reset successfully" });
-});
-
-export const profile = asyncWrapper(async (req, res) => {
-	return res
-		.status(200)
-		.json({
-			sucess: true,
-			data: req.user,
-			message: "User signed up successfully",
-		});
 });
 
 export const logout = asyncWrapper(async (req, res) => {
