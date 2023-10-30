@@ -11,7 +11,7 @@ import { encrypt, decrypt } from "../helpers/Encryptor.js";
 
 const firebase = new FirebaseWrapper();
 const userModel = new User();
-const passwordReset = new PasswordReset();
+const passwordResetModel = new PasswordReset();
 export const login = asyncWrapper(async (req, res) => {
 	const { token } = req.body;
 	const firebaseData = await firebase.verifyToken(token);
@@ -72,9 +72,15 @@ export const signup = asyncWrapper(async (req, res) => {
 export const sendPasswordResetLink = asyncWrapper(async (req, res) => {
 	const uid = await firebase.getID(req.body.email);
 	if (uid) {
-		const code = JSON.stringify({ email: req.body.email });
+		const user = await userModel.findOne({
+			where: { firebase_id: uid },
+		});
+		const passwordResetID = await passwordResetModel.create({
+			user_id: user.id,
+		});
+		const code = encrypt(JSON.stringify({ id: passwordResetID }));
 		const extendedLink =
-			process.env.APP_URL + "/PasswordReset?code=" + encrypt(code);
+			process.env.APP_URL + "/PasswordReset?code=" + code;
 		const text =
 			"Please click on the link below to reset your password.<br><br>" +
 			extendedLink;
@@ -87,28 +93,42 @@ export const sendPasswordResetLink = asyncWrapper(async (req, res) => {
 });
 
 export const validateCode = asyncWrapper(async (req, res) => {
-	try {
-		const { email } = JSON.parse(decrypt(req.params.code));
-		const uid = await firebase.getID(email);
-		if (uid) {
+	const { id } = JSON.parse(decrypt(req.params.code));
+	const passwordReset = await passwordResetModel.findOne({
+		where: { id: id },
+	});
+	if (passwordReset) {
+		const passwordResetDate = new Date(passwordReset.created_at);
+		const validUntilDateTime = new Date(
+			passwordResetDate.getTime() + parseInt(process.env.RESET_VALIDITY)
+		);
+		if (validUntilDateTime >= new Date()) {
 			return res.status(200).json({
 				sucess: true,
 				message: "Reset code validated successfully",
 			});
 		} else {
-			throw new APIError("Reset Code is invalid", 403);
+			throw new APIError("Reset Code has expired", 403);
 		}
-	} catch (error) {
+	} else {
 		throw new APIError("Reset Code is invalid", 403);
 	}
 });
 
 export const resetPassword = asyncWrapper(async (req, res) => {
 	try {
-		const { email } = JSON.parse(decrypt(req.body.code));
-		const uid = await firebase.getID(email);
-		if (uid) {
-			const status = await firebase.resetPassword(uid, req.body.password);
+		const { id } = JSON.parse(decrypt(req.body.code));
+		const passwordReset = await passwordResetModel.findOne({
+			where: { id: id },
+		});
+		if (passwordReset) {
+			const user = await userModel.findOne({
+				where: { id: passwordReset.user_id },
+			});
+			const status = await firebase.resetPassword(
+				user.firebase_id,
+				req.body.password
+			);
 			if (!status) {
 				throw new APIError(
 					"Something went wrong. Please try again",
@@ -118,12 +138,11 @@ export const resetPassword = asyncWrapper(async (req, res) => {
 			return res
 				.status(200)
 				.json({ sucess: true, message: "Password reset successfully" });
-		}
-		else{
+		} else {
 			throw new APIError("Reset Code is invalid", 403);
 		}
 	} catch (error) {
-		console.log(error)
+		console.log(error);
 		throw new APIError("Reset Code is invalid", 403);
 	}
 });
