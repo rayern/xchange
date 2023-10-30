@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import PasswordReset from "../models/PasswordReset.js";
 import asyncWrapper from "../middleware/async.js";
 import APIError from "../errors/APIError.js";
 import AuthError from "../errors/AuthError.js";
@@ -9,10 +10,12 @@ import { sendEmail } from "../helpers/Emailer.js";
 import { encrypt, decrypt } from "../helpers/Encryptor.js";
 
 const firebase = new FirebaseWrapper();
+const userModel = new User()
+const passwordReset = new PasswordReset()
 export const login = asyncWrapper(async (req, res) => {
 	const { token } = req.body;
 	const firebaseData = await firebase.verifyToken(token);
-	const user = await User.findOne({
+	const user = await userModel.findOne({
 		where: { firebase_id: firebaseData.id },
 	});
 	if (user) {
@@ -46,13 +49,13 @@ export const login = asyncWrapper(async (req, res) => {
 export const signup = asyncWrapper(async (req, res) => {
 	const { firstName, lastName, role, token } = req.body;
 	const firebaseData = await firebase.verifyToken(token);
-	let user = await User.findOne({
+	let user = await userModel.findOne({
 		where: { firebase_id: firebaseData.id },
 	});
 	if (user) {
 		throw new APIError("User already exists", 400);
 	}
-	user = await User.create({
+	user = await userModel.create({
 		email: firebaseData.email,
 		first_name: firstName,
 		last_name: lastName,
@@ -69,9 +72,9 @@ export const signup = asyncWrapper(async (req, res) => {
 });
 
 export const sendPasswordResetLink = asyncWrapper(async (req, res) => {
-	const { link, uid } = await firebase.sendPasswordResetLink(req.body.email);
-	if (link) {
-		const extendedLink = link + "&code=" + encrypt(uid);
+	const uid = await firebase.getID(req.body.email);
+	if (uid) {
+		const extendedLink = process.env.APP_URL + "/PasswordReset?code=" + encrypt(uid);
 		const text =
 			"Please click on the link below to reset your password.<br><br>" +
 			extendedLink;

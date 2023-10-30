@@ -118,4 +118,4 @@ class User extends BaseModel {
 	}
 }
 
-export default new User();
+export default User

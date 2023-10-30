@@ -28,15 +28,11 @@ class FirebaseWrapper {
 		}
 	}
 
-	async sendPasswordResetLink(email) {
+	async getID(email) {
 		try {
 			const userRecord = await admin.auth().getUserByEmail(email);
 			const uid = userRecord.uid;
-			const link = await admin.auth().generatePasswordResetLink(
-				email
-			);
-			console.log(link)
-			return {uid, link}
+			return uid
 		} catch (error) {
 			console.log(error)
 			return false
