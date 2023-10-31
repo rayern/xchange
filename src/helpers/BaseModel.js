@@ -8,7 +8,7 @@ class BaseModel {
 	}
 	decodeWhere(where) {
 		let whereStr = "";
-		let params = []
+		let params = [];
 		if (where != "") {
 			whereStr = " WHERE ";
 			for (const key in where) {
@@ -49,12 +49,8 @@ class BaseModel {
 								break;
 							case "between":
 								whereStr += key + " between ? and ?,";
-								params.push(
-									where[key][operator][0]
-								);
-								params.push(
-									where[key][operator][1]
-								);
+								params.push(where[key][operator][0]);
+								params.push(where[key][operator][1]);
 								break;
 						}
 					}
@@ -66,13 +62,13 @@ class BaseModel {
 		} else {
 			whereStr = where;
 		}
-		return {whereStr: rtrim(whereStr, ","), params};
+		return { whereStr: rtrim(whereStr, ","), params };
 	}
 
 	async find({ select = "*", where = "", group = "", order = "" }) {
 		const orderStr = "",
 			groupStr = "";
-		const {whereStr, params} = this.decodeWhere(where);
+		const { whereStr, params } = this.decodeWhere(where);
 		if (order != "") {
 			orderStr = " ORDER BY " + order;
 		}
@@ -80,7 +76,8 @@ class BaseModel {
 			groupStr = " GROUP BY " + group;
 		}
 		const rows = await this.runSQL(
-			`SELECT ${select} FROM ${this.table}${whereStr}${groupStr}${orderStr};`, params
+			`SELECT ${select} FROM ${this.table}${whereStr}${groupStr}${orderStr};`,
+			params
 		);
 		return rows;
 	}
@@ -106,16 +103,18 @@ class BaseModel {
 			values += "?";
 		}
 		const rows = await this.runSQL(
-			`INSERT INTO ${this.table} (${columns}) VALUES (${values})`, Object.values(props)
+			`INSERT INTO ${this.table} (${columns}) VALUES (${values})`,
+			Object.values(props)
 		);
 		return rows.insertId;
 	}
 
 	async delete({ where }) {
-		const { whereStr, params } = decodeWhere(where);
+		const { whereStr, params } = this.decodeWhere(where);
 		if (whereStr) {
 			const rows = await this.runSQL(
-				`DELETE FROM ${this.table}${whereStr}`, params
+				`DELETE FROM ${this.table}${whereStr}`,
+				params
 			);
 		}
 		return rows;
@@ -123,7 +122,7 @@ class BaseModel {
 
 	async update(props, { where }) {
 		let values = "";
-		let parameters = []
+		let parameters = [];
 		for (const key in props) {
 			if (values != "") {
 				values += ",";
@@ -131,11 +130,26 @@ class BaseModel {
 			values += key + " = ?";
 			parameters.push(props[key]);
 		}
-		const { whereStr, params } = decodeWhere(where);
+		const { whereStr, params } = this.decodeWhere(where);
+		if (params.length < 1 || parameters.length < 1) return false;
 		const rows = await this.runSQL(
-			`UPDATE ${this.table} SET ${values}${whereStr}`, [...parameters,...params]
+			`UPDATE ${this.table} SET ${values}${whereStr}`,
+			[...parameters, ...params]
 		);
 		return rows.affectedRows;
+	}
+
+	async save() {
+		let fields = [];
+		for (const key in this) {
+			if (!["table", "id"].includes(key)) {
+				fields[key] = this[key];
+			}
+		}
+		const result = await this.update(fields, {
+			where: { id: this.id}
+		});
+		return result;
 	}
 
 	async callProcedure(name, params) {

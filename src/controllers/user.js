@@ -28,7 +28,7 @@ export const login = asyncWrapper(async (req, res) => {
 		);
 		if (user.first_login === null) user.first_login = new Date();
 		user.last_login = new Date();
-		//user.save()
+		user.save()
 		return res
 			.cookie(process.env.AUTH_COOKIE_NAME, jwtToken, {
 				expires: new Date(Date.now() + 25892000000),
@@ -97,7 +97,7 @@ export const validateCode = asyncWrapper(async (req, res) => {
 	const passwordReset = await passwordResetModel.findOne({
 		where: { id: id },
 	});
-	if (passwordReset) {
+	if (passwordReset && passwordReset.is_used == 0) {
 		const passwordResetDate = new Date(passwordReset.created_at);
 		const validUntilDateTime = new Date(
 			passwordResetDate.getTime() + parseInt(process.env.RESET_VALIDITY)
@@ -135,6 +135,8 @@ export const resetPassword = asyncWrapper(async (req, res) => {
 					400
 				);
 			}
+			passwordReset.is_used = 1;
+			passwordReset.save();
 			return res
 				.status(200)
 				.json({ sucess: true, message: "Password reset successfully" });
