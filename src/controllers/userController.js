@@ -9,6 +9,7 @@ import FirebaseWrapper from "../helpers/FirebaseWrapper.js";
 import { sendEmail } from "../helpers/Emailer.js";
 import { encrypt, decrypt } from "../helpers/Encryptor.js";
 
+const config = require('../config/app.cjs')
 const firebase = new FirebaseWrapper();
 const userModel = new User();
 const passwordResetModel = new PasswordReset();
@@ -21,7 +22,7 @@ export const login = asyncWrapper(async (req, res) => {
 			{ token: token, role: user.role_id },
 			process.env.JWT_SECRET,
 			{
-				expiresIn: process.env.JWT_EXPIRE,
+				expiresIn: config.jwt.expiry,
 			}
 		);
 		userUpdate = {}
@@ -29,7 +30,7 @@ export const login = asyncWrapper(async (req, res) => {
 		userUpdate.last_login = new Date();
 		userModel.update(userUpdate, user.id)
 		return res
-			.cookie(process.env.AUTH_COOKIE_NAME, jwtToken, {
+			.cookie(config.cookie.name, jwtToken, {
 				expires: new Date(Date.now() + 25892000000),
 				sameSite: "None",
 				secure: true,
@@ -89,7 +90,7 @@ export const validateCode = asyncWrapper(async (req, res) => {
 	if (passwordReset && passwordReset.is_used == 0) {
 		const passwordResetDate = new Date(passwordReset.created_at);
 		const validUntilDateTime = new Date(
-			passwordResetDate.getTime() + parseInt(process.env.RESET_VALIDITY)
+			passwordResetDate.getTime() + parseInt(config.user.password.reset.validity)
 		);
 		if (validUntilDateTime >= new Date()) {
 			return res.status(200).json({
@@ -134,7 +135,7 @@ export const resetPassword = asyncWrapper(async (req, res) => {
 });
 
 export const logout = asyncWrapper(async (req, res) => {
-	res.clearCookie(process.env.AUTH_COOKIE_NAME);
+	res.clearCookie(config.cookie.name);
 	return res
 		.status(200)
 		.json({ success: true, message: "User logged out successfully" });
