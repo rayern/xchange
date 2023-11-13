@@ -6,91 +6,7 @@ class BaseModel {
 		const [rows] = await pool.query(sql, params);
 		return rows;
 	}
-	decodeWhere(where) {
-		let whereStr = "";
-		let params = [];
-		if (where != "") {
-			whereStr = " WHERE ";
-			for (const key in where) {
-				if (typeof where[key] === "object") {
-					for (const operator in where[key]) {
-						switch (operator) {
-							case "lt":
-								whereStr += key + " < ?,";
-								params.push(where[key][operator]);
-								break;
-							case "gt":
-								whereStr += key + " > ?,";
-								params.push(where[key][operator]);
-								break;
-							case "lte":
-								whereStr += key + " <= ?,";
-								params.push(where[key][operator]);
-								break;
-							case "gte":
-								whereStr += key + " >= ?,";
-								params.push(where[key][operator]);
-								break;
-							case "like":
-								whereStr += key + " like ?,";
-								params.push(where[key][operator]);
-								break;
-							case "contains":
-								whereStr += key + " like %?%,";
-								params.push(where[key][operator]);
-								break;
-							case "startsWith":
-								whereStr += key + " like ?%,";
-								params.push(where[key][operator]);
-								break;
-							case "endsWith":
-								whereStr += key + " like %?,";
-								params.push(where[key][operator]);
-								break;
-							case "between":
-								whereStr += key + " between ? and ?,";
-								params.push(where[key][operator][0]);
-								params.push(where[key][operator][1]);
-								break;
-						}
-					}
-				} else {
-					whereStr += key + " = ?,";
-					params.push(where[key]);
-				}
-			}
-		} else {
-			whereStr = where;
-		}
-		return { whereStr: rtrim(whereStr, ","), params };
-	}
-
-	async find({ select = "*", where = "", group = "", order = "" }) {
-		const orderStr = "",
-			groupStr = "";
-		const { whereStr, params } = this.decodeWhere(where);
-		if (order != "") {
-			orderStr = " ORDER BY " + order;
-		}
-		if (group != "") {
-			groupStr = " GROUP BY " + group;
-		}
-		const rows = await this.runSQL(
-			`SELECT ${select} FROM ${this.table}${whereStr}${groupStr}${orderStr};`,
-			params
-		);
-		return rows;
-	}
-
-	async findOne({ select = "*", where = "", group = "", order = "" }) {
-		const rows = await this.find({ select, where, group, order });
-		if (rows.length === 0) {
-			return null;
-		}
-		Object.assign(this, rows[0]);
-		return this;
-	}
-
+	
 	async create(props) {
 		let columns = "",
 			values = "";
@@ -130,25 +46,12 @@ class BaseModel {
 			values += key + " = ?";
 			parameters.push(props[key]);
 		}
-		if (params.length < 1 || parameters.length < 1) return false;
+		if (parameters.length < 1) return false;
 		const rows = await this.runSQL(
 			`UPDATE ${this.table} SET ${values} WHERE id = ?`,
 			[...parameters, id]
 		);
 		return rows.affectedRows;
-	}
-
-	async save() {
-		let fields = [];
-		for (const key in this) {
-			if (!["table", "id"].includes(key)) {
-				fields[key] = this[key];
-			}
-		}
-		const result = await this.update(fields, {
-			where: { id: this.id}
-		});
-		return result;
 	}
 
 	async callProcedure(name, params) {
@@ -165,8 +68,12 @@ class BaseModel {
 		}
 	}
 
-	getDatabase() {
-		return this.db;
+	async getById(id){
+		const rows = await this.runSQL(
+			`SELECT * FROM ${this.table} WHERE id = ?`,
+			id
+		);
+		return rows[0];
 	}
 }
 

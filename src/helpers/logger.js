@@ -2,7 +2,7 @@ import { createLogger, transports, format } from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 
 const { combine, timestamp, label, printf } = format;
-const config = require("../config/app.cjs")
+import config from '../config/appConfig.cjs'
 const logFormat = printf(({ timestamp, level, message }) => {
   return `${timestamp} [${level}]: ${message}`;
 });

@@ -4,18 +4,17 @@ import AuthError from "../errors/AuthError.js"
 import "dotenv/config"
 import asyncWrapper from "../middleware/async.js"
 import FirebaseWrapper from "../helpers/FirebaseWrapper.js"
+import config from "../config/appConfig.cjs"
 
 const userModel = new User()
 const auth = asyncWrapper(async (req, res, next) => {
-	if(!req.cookies[process.env.AUTH_COOKIE_NAME]){
+	if(!req.cookies[config.cookie.name]){
 		throw new AuthError("Unauthorized", 403)
 	}
-	const { token, role } = jwt.verify(req.cookies[process.env.AUTH_COOKIE_NAME], process.env.JWT_SECRET)
+	const { token, role } = jwt.verify(req.cookies[config.cookie.name], process.env.JWT_SECRET)
 	const firebase = new FirebaseWrapper
 	const firebaseData = await firebase.verifyToken(token)
-	req.user = await userModel.findOne({
-		where: { firebase_id: firebaseData.id },
-	})
+	req.user = await userModel.getByFirebaseId(firebaseData.id)
 	if (req.user == null) {
 		throw new AuthError("Unauthorized", 403)
 	}

@@ -8,8 +8,8 @@ import "dotenv/config";
 import FirebaseWrapper from "../helpers/FirebaseWrapper.js";
 import { sendEmail } from "../helpers/Emailer.js";
 import { encrypt, decrypt } from "../helpers/Encryptor.js";
+import config from '../config/appConfig.cjs'
 
-const config = require('../config/app.cjs')
 const firebase = new FirebaseWrapper();
 const userModel = new User();
 const passwordResetModel = new PasswordReset();
@@ -25,13 +25,13 @@ export const login = asyncWrapper(async (req, res) => {
 				expiresIn: config.jwt.expiry,
 			}
 		);
-		userUpdate = {}
+		let userUpdate = {}
 		if (user.first_login === null) userUpdate.first_login = new Date();
 		userUpdate.last_login = new Date();
 		userModel.update(userUpdate, user.id)
 		return res
 			.cookie(config.cookie.name, jwtToken, {
-				expires: new Date(Date.now() + 25892000000),
+				expires: new Date(Date.now() + config.cookie.expiry),
 				sameSite: "None",
 				secure: true,
 			})
@@ -121,7 +121,7 @@ export const resetPassword = asyncWrapper(async (req, res) => {
 					400
 				);
 			}
-			passwordReset.update({is_used: 1}, passwordReset.id)
+			passwordResetModel.update({is_used: 1}, passwordReset.id)
 			return res
 				.status(200)
 				.json({ sucess: true, message: "Password reset successfully" });
@@ -129,7 +129,7 @@ export const resetPassword = asyncWrapper(async (req, res) => {
 			throw new APIError("Reset Code is invalid", 403);
 		}
 	} catch (error) {
-		console.log(error);
+		console.log(error)
 		throw new APIError("Reset Code is invalid", 403);
 	}
 });

@@ -7,6 +7,7 @@ module.exports = {
 	},
 	cookie: {
 		name: "auth_user",
+		expiry: 25892000000
 	},
 	user: {
 		password: {
