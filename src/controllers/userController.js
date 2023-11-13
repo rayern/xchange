@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
-import User from "../models/User.js";
-import PasswordReset from "../models/PasswordReset.js";
+import User from "../models/UserModel.js";
+import PasswordReset from "../models/PasswordResetModel.js";
 import asyncWrapper from "../middleware/async.js";
 import APIError from "../errors/APIError.js";
 import AuthError from "../errors/AuthError.js";
@@ -15,9 +15,7 @@ const passwordResetModel = new PasswordReset();
 export const login = asyncWrapper(async (req, res) => {
 	const { token } = req.body;
 	const firebaseData = await firebase.verifyToken(token);
-	const user = await userModel.findOne({
-		where: { firebase_id: firebaseData.id },
-	});
+	const user = await userModel.getByFirebaseId(firebaseData.id);
 	if (user) {
 		const jwtToken = jwt.sign(
 			{ token: token, role: user.role_id },
@@ -26,9 +24,10 @@ export const login = asyncWrapper(async (req, res) => {
 				expiresIn: process.env.JWT_EXPIRE,
 			}
 		);
-		if (user.first_login === null) user.first_login = new Date();
-		user.last_login = new Date();
-		user.save()
+		userUpdate = {}
+		if (user.first_login === null) userUpdate.first_login = new Date();
+		userUpdate.last_login = new Date();
+		userModel.update(userUpdate, user.id)
 		return res
 			.cookie(process.env.AUTH_COOKIE_NAME, jwtToken, {
 				expires: new Date(Date.now() + 25892000000),
@@ -49,13 +48,7 @@ export const login = asyncWrapper(async (req, res) => {
 export const signup = asyncWrapper(async (req, res) => {
 	const { firstName, lastName, role, token } = req.body;
 	const firebaseData = await firebase.verifyToken(token);
-	let user = await userModel.findOne({
-		where: { firebase_id: firebaseData.id },
-	});
-	if (user) {
-		throw new APIError("User already exists", 400);
-	}
-	user = await userModel.create({
+	const user = await userModel.create({
 		email: firebaseData.email,
 		first_name: firstName,
 		last_name: lastName,
@@ -72,9 +65,7 @@ export const signup = asyncWrapper(async (req, res) => {
 export const sendPasswordResetLink = asyncWrapper(async (req, res) => {
 	const uid = await firebase.getID(req.body.email);
 	if (uid) {
-		const user = await userModel.findOne({
-			where: { firebase_id: uid },
-		});
+		const user = await userModel.getByFirebaseId(uid);
 		const passwordResetID = await passwordResetModel.create({
 			user_id: user.id,
 		});
@@ -94,9 +85,7 @@ export const sendPasswordResetLink = asyncWrapper(async (req, res) => {
 
 export const validateCode = asyncWrapper(async (req, res) => {
 	const { id } = JSON.parse(decrypt(req.params.code));
-	const passwordReset = await passwordResetModel.findOne({
-		where: { id: id },
-	});
+	const passwordReset = await passwordResetModel.getById(id);
 	if (passwordReset && passwordReset.is_used == 0) {
 		const passwordResetDate = new Date(passwordReset.created_at);
 		const validUntilDateTime = new Date(
@@ -118,13 +107,9 @@ export const validateCode = asyncWrapper(async (req, res) => {
 export const resetPassword = asyncWrapper(async (req, res) => {
 	try {
 		const { id } = JSON.parse(decrypt(req.body.code));
-		const passwordReset = await passwordResetModel.findOne({
-			where: { id: id },
-		});
+		const passwordReset = await passwordResetModel.getById(id);
 		if (passwordReset) {
-			const user = await userModel.findOne({
-				where: { id: passwordReset.user_id },
-			});
+			const user = await userModel.getById(passwordReset.user_id);
 			const status = await firebase.resetPassword(
 				user.firebase_id,
 				req.body.password
@@ -135,8 +120,7 @@ export const resetPassword = asyncWrapper(async (req, res) => {
 					400
 				);
 			}
-			passwordReset.is_used = 1;
-			passwordReset.save();
+			passwordReset.update({is_used: 1}, passwordReset.id)
 			return res
 				.status(200)
 				.json({ sucess: true, message: "Password reset successfully" });

@@ -120,7 +120,7 @@ class BaseModel {
 		return rows;
 	}
 
-	async update(props, { where }) {
+	async update(props, id) {
 		let values = "";
 		let parameters = [];
 		for (const key in props) {
@@ -130,11 +130,10 @@ class BaseModel {
 			values += key + " = ?";
 			parameters.push(props[key]);
 		}
-		const { whereStr, params } = this.decodeWhere(where);
 		if (params.length < 1 || parameters.length < 1) return false;
 		const rows = await this.runSQL(
-			`UPDATE ${this.table} SET ${values}${whereStr}`,
-			[...parameters, ...params]
+			`UPDATE ${this.table} SET ${values} WHERE id = ?`,
+			[...parameters, id]
 		);
 		return rows.affectedRows;
 	}

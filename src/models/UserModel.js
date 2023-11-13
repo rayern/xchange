@@ -116,6 +116,22 @@ class User extends BaseModel {
 		}
 		return this.update(newProperties);
 	}
+
+	async getById(id){
+		const rows = await this.runSQL(
+			`SELECT * FROM ${this.table} WHERE id = ?`,
+			id
+		);
+		return rows[0];
+	}
+
+	async getByFirebaseId(firebase_id){
+		const rows = await this.runSQL(
+			`SELECT * FROM ${this.table} WHERE firebase_id = ?`,
+			firebase_id
+		);
+		return rows[0];
+	}
 }
 
 export default User
