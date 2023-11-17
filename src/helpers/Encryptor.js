@@ -14,3 +14,5 @@ export const decrypt = (encrypted) => {
 	decryptedUserId += decipher.final("utf-8");
 	return decryptedUserId;
 };
+
+export const randomString = (bytes = 32) => crypto.randomBytes(bytes).toString('hex')
