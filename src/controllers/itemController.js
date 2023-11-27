@@ -2,18 +2,20 @@ import User from "../models/UserModel.js";
 import asyncWrapper from "../middleware/async.js";
 import APIError from "../errors/apiError.js";
 import AuthErrorfrom from "../errors/authError.js";
-import {handleNewItem} from "../service/itemService.js";
+import {getAllItems, handleNewItem} from "../service/itemService.js";
 
-export const getAll = asyncWrapper(async (req, res) => {
-    let startIdx = req.params.startIdx;
+export const getAll = async (req, res) => {
+    let items = await getAllItems(req.params.startIdx);
+    
+    return res
+        .status(200)
+        .json({success: true, data: items[0], message: ""})
+};
 
-
-});
-
-export const addNew = asyncWrapper(async (req, res) => {
+export const addNew = async (req, res) => {
     // TODO: we will get the user from middleware
     const User = {"id": 111};
-    
+
     let item = req.body;
 
     handleNewItem(User, item)
@@ -30,5 +32,5 @@ export const addNew = asyncWrapper(async (req, res) => {
             // TODO: log it
         });
 
-});
+};
 

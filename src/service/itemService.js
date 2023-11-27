@@ -1,14 +1,18 @@
 import User from "../models/UserModel.js";
-import asyncWrapper from "../middleware/async.js";
 import APIError from "../errors/apiError.js";
 import {listImages, uploadImage} from "./s3Service.js";
+import {fetchItems, saveNewItem} from "../models/itemModel.js";
 
-let existingImages = new Set();
+export const getAllItems = async (fromIdx) => {
+    return fetchItems(fromIdx);
+};
+
 export const handleNewItem = async (user, item) => {
     if (user === undefined || item === undefined) {
         throw new Error("user or item undefined");
     }
 
+    let existingImages = new Set();
     listImages(user.id)
         .then((data) => {
             if (data.Contents !== undefined) {
@@ -17,13 +21,11 @@ export const handleNewItem = async (user, item) => {
                 });
             }
 
-            uploadItemImages(user, item);
+            uploadItemImages(user, item, existingImages);
         });
-
-    // return Promise.allSettled(promises);
 }
 
-const uploadItemImages = (user, item) => {
+const uploadItemImages = (user, item, existingImages) => {
     if (item.hasOwnProperty("uploads")) {
         let uploads = item.uploads;
         const uploadCount = uploads.length;
@@ -31,8 +33,8 @@ const uploadItemImages = (user, item) => {
         const promises = Array();
         uploads.forEach(upload => {
             // check to see if any filename exists
-            let name = upload.name;
-            if (existingImages.has(user.id + "/" + name)) {
+            let name = user.id + "/" + upload.name;
+            if (existingImages.has(name)) {
                 const comps = name.split(".");
                 // comps[0] contains the directory
                 if (comps.length === 1) {
@@ -68,6 +70,11 @@ const uploadItemImages = (user, item) => {
 
                 // TODO: save to database
                 console.log("We will save the item here: \n" + JSON.stringify(item));
+                saveNewItem(user, item)
+                    .catch((err) => {
+                        // log error
+                        console.error(err);
+                    })
             });
     } else {
         console.log("no files uploaded");

@@ -31,7 +31,7 @@ export const uploadImage = async (userId, filename, contentType, base64Image) =>
     
     const command = new PutObjectCommand({
         Bucket: process.env.AWS_BUCKET,
-        Key: userId + "/" + filename,
+        Key: filename,
         Body: buf,
         ContentEncoding: "base64",
         ContentType: contentType,
