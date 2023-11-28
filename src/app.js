@@ -11,7 +11,7 @@ import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import { loadEnums } from "./service/enumService.js"
 
-const PORT = process.env.APP_PORT || 3000;
+const PORT = process.env.PORT || 3000;
 const app = express();
 global.ENUM = {};
 
