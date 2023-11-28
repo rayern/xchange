@@ -4,7 +4,7 @@ import authMiddleware from '../middleware/auth.js';
 
 const router = express.Router();
 
-// router.use(authMiddleware);
+router.use(['/new'], authMiddleware)
 
 router.get('/all/:startIdx', getAll);
 router.post('/new', addNew);

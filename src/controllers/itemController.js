@@ -19,12 +19,9 @@ export const getAll = async (req, res) => {
 };
 
 export const addNew = async (req, res) => {
-    // TODO: we will get the user from middleware
-    const User = {"id": 111};
-
     let item = req.body;
 
-    handleNewItem(User, item)
+    handleNewItem(req.user, item)
         .then((data) => {
             return res
                 .status(200)
