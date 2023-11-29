@@ -1,6 +1,6 @@
 import {S3Client, PutObjectCommand, ListObjectsV2Command} from "@aws-sdk/client-s3";
 import {randomString} from "../helpers/Encryptor.js";
-import asyncWrapper from "../middleware/async.js";
+import "dotenv/config";
 
 const s3 = new S3Client({
     region: process.env.AWS_REGION,
@@ -9,6 +9,8 @@ const s3 = new S3Client({
         secretAccessKey: process.env.AWS_SECRET_KEY,
     },
 });
+
+const s3Url = "https://" + process.env.AWS_BUCKET + ".s3.amazonaws.com/"
 
 export const listImages = async (userId) => {
     // list the images first. This should be blocking
@@ -29,7 +31,7 @@ export const uploadImage = async (userId, filename, contentType, base64Image) =>
         "base64"
     );
     
-    const command = new PutObjectCommand({
+    const putCommand = new PutObjectCommand({
         Bucket: process.env.AWS_BUCKET,
         Key: filename,
         Body: buf,
@@ -37,5 +39,6 @@ export const uploadImage = async (userId, filename, contentType, base64Image) =>
         ContentType: contentType,
     });
 
-    return s3.send(command)
+    s3.send(putCommand)
+    return s3Url + filename
 }

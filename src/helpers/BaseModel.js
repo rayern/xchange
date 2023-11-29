@@ -3,39 +3,11 @@ import { rtrim } from "./utils.js";
 
 class BaseModel {
 	async runSQL(sql, params) {
+		console.log(params, sql)
 		const [rows] = await pool.query(sql, params);
 		return rows;
 	}
 	
-	async create(props) {
-		let columns = "",
-			values = "";
-		for (const key in props) {
-			if (columns != "") {
-				columns += ",";
-				values += ",";
-			}
-			columns += key;
-			values += "?";
-		}
-		const rows = await this.runSQL(
-			`INSERT INTO ${this.table} (${columns}) VALUES (${values})`,
-			Object.values(props)
-		);
-		return rows.insertId;
-	}
-
-	async delete({ where }) {
-		const { whereStr, params } = this.decodeWhere(where);
-		if (whereStr) {
-			const rows = await this.runSQL(
-				`DELETE FROM ${this.table}${whereStr}`,
-				params
-			);
-		}
-		return rows;
-	}
-
 	async update(props, id) {
 		let values = "";
 		let parameters = [];
