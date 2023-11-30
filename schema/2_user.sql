@@ -84,7 +84,7 @@ DELIMITER $$
 CREATE PROCEDURE UpsertAddress(
     IN p_user_id INT,
     IN p_address JSON,
-    OUT op_address_id BIGINT
+    OUT op_address_id INT
 )
 BEGIN
     DECLARE l_address_id INT;
@@ -113,3 +113,33 @@ BEGIN
 
 END$$
 DELIMITER ;
+
+DROP PROCEDURE IF EXISTS UpsertPasswordReset;
+DELIMITER $$
+CREATE PROCEDURE UpsertPasswordReset(
+    IN p_id INT,
+    IN p_user_id INT,
+    IN p_is_used TINYINT,
+    OUT op_password_reset_id INT
+)
+BEGIN
+    DECLARE l_password_reset_id INT;
+
+    IF p_id IS NULL THEN
+        -- Insert a row
+        INSERT INTO password_reset (user_id) VALUES (p_user_id);
+
+        -- Get address id
+        SET l_password_reset_id = LAST_INSERT_ID();
+    ELSE
+        -- Update address
+        UPDATE password_reset SET is_used = p_is_used WHERE id = p_id;
+        SET l_password_reset_id = p_id;
+    END IF;
+
+    -- Set the output parameter
+    SET op_password_reset_id = l_password_reset_id;
+
+END$$
+DELIMITER ;
+

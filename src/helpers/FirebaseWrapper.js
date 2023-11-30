@@ -24,6 +24,7 @@ class FirebaseWrapper {
 				throw new Error();
 			}
 		} catch (err) {
+			console.log(err)
 			throw new AuthError("User token is invalid", 400);
 		}
 	}

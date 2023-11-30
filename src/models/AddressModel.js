@@ -18,13 +18,5 @@ export const updateAddress = async (user, address) => {
 		timeout: 30000, // 30s
 		values: [user.id, JSON.stringify({latitude, longitude, ...address})],
 	};
- 
 	pool.query(params)
-		.then((data) => {
-			console.log("Query returned");
-		})
-		.catch((err) => {
-			console.error(err);
-			throw err;
-		});
 };

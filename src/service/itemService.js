@@ -1,4 +1,3 @@
-import User from "../models/UserModel.js";
 import APIError from "../errors/apiError.js";
 import {listImages, uploadImage} from "./s3Service.js";
 import {fetchItems, saveNewItem} from "../models/itemModel.js";
