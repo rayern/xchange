@@ -1,4 +1,10 @@
+.git/
+
 /node_modules
 /build
 /logs
 .env
+Procfile
+
+# Fleet ide
+.fleet/

@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import User from "../models/UserModel.js";
+import { getAddressByUserId, updateAddress } from "../models/AddressModel.js";
 import PasswordReset from "../models/PasswordResetModel.js";
 import asyncWrapper from "../middleware/async.js";
 import APIError from "../errors/APIError.js";
@@ -8,7 +9,8 @@ import "dotenv/config";
 import FirebaseWrapper from "../helpers/FirebaseWrapper.js";
 import { sendEmail } from "../helpers/Emailer.js";
 import { encrypt, decrypt } from "../helpers/Encryptor.js";
-import config from '../config/appConfig.cjs'
+import config from "../config/appConfig.cjs";
+import { uploadImage } from "../service/s3Service.js";
 
 const firebase = new FirebaseWrapper();
 const userModel = new User();
@@ -25,10 +27,10 @@ export const login = asyncWrapper(async (req, res) => {
 				expiresIn: config.jwt.expiry,
 			}
 		);
-		let userUpdate = {}
+		let userUpdate = {};
 		if (user.first_login === null) userUpdate.first_login = new Date();
 		userUpdate.last_login = new Date();
-		userModel.update(userUpdate, user.id)
+		userModel.update(userUpdate, user.id);
 		return res
 			.cookie(config.cookie.name, jwtToken, {
 				expires: new Date(Date.now() + config.cookie.expiry),
@@ -90,7 +92,8 @@ export const validateCode = asyncWrapper(async (req, res) => {
 	if (passwordReset && passwordReset.is_used == 0) {
 		const passwordResetDate = new Date(passwordReset.created_at);
 		const validUntilDateTime = new Date(
-			passwordResetDate.getTime() + parseInt(config.user.password.reset.validity)
+			passwordResetDate.getTime() +
+				parseInt(config.user.password.reset.validity)
 		);
 		if (validUntilDateTime >= new Date()) {
 			return res.status(200).json({
@@ -121,7 +124,7 @@ export const resetPassword = asyncWrapper(async (req, res) => {
 					400
 				);
 			}
-			passwordResetModel.update({is_used: 1}, passwordReset.id)
+			passwordResetModel.update({ is_used: 1 }, passwordReset.id);
 			return res
 				.status(200)
 				.json({ sucess: true, message: "Password reset successfully" });
@@ -129,7 +132,7 @@ export const resetPassword = asyncWrapper(async (req, res) => {
 			throw new APIError("Reset Code is invalid", 403);
 		}
 	} catch (error) {
-		console.log(error)
+		console.log(error);
 		throw new APIError("Reset Code is invalid", 403);
 	}
 });
@@ -139,4 +142,75 @@ export const logout = asyncWrapper(async (req, res) => {
 	return res
 		.status(200)
 		.json({ success: true, message: "User logged out successfully" });
+});
+
+export const getProfile = asyncWrapper(async (req, res) => {
+	const address_record = await getAddressByUserId(req.user);
+	return res.status(200).json({
+		success: true,
+		data: {
+			firstName: req.user.first_name,
+			lastName: req.user.last_name,
+			address: address_record?.address ?? null,
+			profile_pic: req.user.profile_pic,
+		},
+		message: "Profile fetched successfully",
+	});
+});
+
+export const updateProfile = asyncWrapper(async (req, res) => {
+	const { firstName, lastName, address, profilePic } = req.body;
+	let profile_pic = null;
+	if (profilePic) {
+		profile_pic = req.user.id + "/" + profilePic.filename;
+		await uploadImage(
+			req.user.id,
+			profile_pic,
+			profilePic.type,
+			profilePic.base64
+		);
+	}
+	const id = req.user.id;
+	userModel.update({
+		id,
+		first_name: firstName,
+		last_name: lastName,
+		profile_pic,
+	});
+	if (address) {
+		try {
+			await updateAddress(req.user, address);
+		} catch (error) {
+			return res.status(400).json({ success: true, message: error.message });
+		}
+	}
+	return res
+		.status(200)
+		.json({ success: true, message: "Profile updated successfully" });
+});
+
+export const updateProfilePic = asyncWrapper(async (req, res) => {
+	const { filename, type, base64 } = req.body;
+	profile_pic = req.user.id + "/" + filename;
+	await uploadImage(req.user.id, profile_pic, type, base64);
+	const id = req.user.id;
+	userModel.update({
+		id,
+		profile_pic,
+	});
+	return res.status(200).json({
+		success: true,
+		message: "Profile picture updated successfully",
+	});
+});
+
+export const updateProfileAddress = asyncWrapper(async (req, res) => {
+	try {
+		await updateAddress(req.user, req.body);
+	} catch (error) {
+		return res.status(400).json({ success: true, message: error.message });
+	}
+	return res
+		.status(200)
+		.json({ success: true, message: "Address updated successfully" });
 });
