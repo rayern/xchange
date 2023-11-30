@@ -3,7 +3,7 @@ import { fetchLatLon } from "../service/smartyStreetsService.js";
 
 export const getAddressByUserId = async (user) => {
 	const params = {
-		sql: "SELECT a.* FROM address as a left join user_address as u on a.id = u.address_id WHERE u.user_id = ? and a.active = 1",
+		sql: "SELECT a.* FROM Address as a left join UserAddress as u on a.id = u.address_id WHERE u.user_id = ? and a.active = 1",
 		timeout: 30000, // 30s
 		values: [user.id],
 	};

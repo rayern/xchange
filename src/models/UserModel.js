@@ -9,7 +9,7 @@ export const createUser = async ({
 	firebase_id,
 }) => {
 	const params = {
-		sql: "call addUser(?, ?, ?, ?, ?)",
+		sql: "call AddUser(?, ?, ?, ?, ?)",
 		timeout: 30000, // 30s
 		values: [first_name, last_name, firebase_id, email, role_id],
 	};
@@ -30,7 +30,7 @@ export const updateUser = async ({
 	is_active = null,
 }) => {
 	const params = {
-		sql: "call updateUser(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		sql: "call UpdateUser(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		timeout: 30000, // 30s
 		values: [
 			id,
@@ -50,7 +50,7 @@ export const updateUser = async ({
 
 export const getUserByFirebaseId = async (firebase_id) => {
 	const params = {
-		sql: "SELECT * FROM users WHERE firebase_id = ?",
+		sql: "SELECT * FROM Users WHERE firebase_id = ?",
 		timeout: 30000, // 30s
 		values: [firebase_id],
 	};
@@ -60,7 +60,7 @@ export const getUserByFirebaseId = async (firebase_id) => {
 
 export const getUserById = async (id) => {
 	const params = {
-		sql: "SELECT * FROM users WHERE id = ?",
+		sql: "SELECT * FROM Users WHERE id = ?",
 		timeout: 30000, // 30s
 		values: [id],
 	};
@@ -87,7 +87,7 @@ export const upsertPasswordReset = async ({
 };
 export const getPasswordResetById = async (id) => {
 	const params = {
-		sql: "SELECT * FROM password_reset WHERE id = ?",
+		sql: "SELECT * FROM PasswordReset WHERE id = ?",
 		timeout: 30000, // 30s
 		values: [id],
 	};
