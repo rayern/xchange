@@ -1,7 +1,14 @@
 import jwt from "jsonwebtoken";
-import User from "../models/UserModel.js";
+import {
+	createUser,
+	updateUser,
+	getUserById,
+	getUserByFirebaseId,
+	fetchProfilePic,
+	upsertPasswordReset,
+	getPasswordResetById,
+} from "../models/UserModel.js";
 import { getAddressByUserId, updateAddress } from "../models/AddressModel.js";
-import PasswordReset from "../models/PasswordResetModel.js";
 import asyncWrapper from "../middleware/async.js";
 import APIError from "../errors/APIError.js";
 import AuthError from "../errors/AuthError.js";
@@ -13,12 +20,10 @@ import config from "../config/appConfig.cjs";
 import { uploadImage } from "../service/s3Service.js";
 
 const firebase = new FirebaseWrapper();
-const userModel = new User();
-const passwordResetModel = new PasswordReset();
 export const login = asyncWrapper(async (req, res) => {
 	const { token } = req.body;
 	const firebaseData = await firebase.verifyToken(token);
-	const user = await userModel.getByFirebaseId(firebaseData.id);
+	const user = await getUserByFirebaseId(firebaseData.id);
 	if (user) {
 		const jwtToken = jwt.sign(
 			{ token: token, role: user.role_id },
@@ -30,7 +35,7 @@ export const login = asyncWrapper(async (req, res) => {
 		let userUpdate = {};
 		if (user.first_login === null) userUpdate.first_login = new Date();
 		userUpdate.last_login = new Date();
-		userModel.update(userUpdate, user.id);
+		updateUser(userUpdate, user.id);
 		return res
 			.cookie(config.cookie.name, jwtToken, {
 				expires: new Date(Date.now() + config.cookie.expiry),
@@ -51,7 +56,7 @@ export const login = asyncWrapper(async (req, res) => {
 export const signup = asyncWrapper(async (req, res) => {
 	const { firstName, lastName, role, token } = req.body;
 	const firebaseData = await firebase.verifyToken(token);
-	const user = await userModel.create({
+	const user = await createUser({
 		email: firebaseData.email,
 		first_name: firstName,
 		last_name: lastName,
@@ -68,8 +73,8 @@ export const signup = asyncWrapper(async (req, res) => {
 export const sendPasswordResetLink = asyncWrapper(async (req, res) => {
 	const uid = await firebase.getID(req.body.email);
 	if (uid) {
-		const user = await userModel.getByFirebaseId(uid);
-		const passwordResetID = await passwordResetModel.create({
+		const user = await getUserByFirebaseId(uid);
+		const passwordResetID = await upsertPasswordReset({
 			user_id: user.id,
 		});
 		const code = encrypt(JSON.stringify({ id: passwordResetID }));
@@ -88,7 +93,7 @@ export const sendPasswordResetLink = asyncWrapper(async (req, res) => {
 
 export const validateCode = asyncWrapper(async (req, res) => {
 	const { id } = JSON.parse(decrypt(req.params.code));
-	const passwordReset = await passwordResetModel.getById(id);
+	const passwordReset = await getPasswordResetById(id);
 	if (passwordReset && passwordReset.is_used == 0) {
 		const passwordResetDate = new Date(passwordReset.created_at);
 		const validUntilDateTime = new Date(
@@ -111,9 +116,9 @@ export const validateCode = asyncWrapper(async (req, res) => {
 export const resetPassword = asyncWrapper(async (req, res) => {
 	try {
 		const { id } = JSON.parse(decrypt(req.body.code));
-		const passwordReset = await passwordResetModel.getById(id);
+		const passwordReset = await getPasswordResetById(id);
 		if (passwordReset) {
-			const user = await userModel.getById(passwordReset.user_id);
+			const user = await getUserById(passwordReset.user_id);
 			const status = await firebase.resetPassword(
 				user.firebase_id,
 				req.body.password
@@ -124,7 +129,7 @@ export const resetPassword = asyncWrapper(async (req, res) => {
 					400
 				);
 			}
-			passwordResetModel.update({ is_used: 1 }, passwordReset.id);
+			upsertPasswordReset({ id: passwordReset.id, is_used: 1 });
 			return res
 				.status(200)
 				.json({ sucess: true, message: "Password reset successfully" });
@@ -152,7 +157,7 @@ export const getProfile = asyncWrapper(async (req, res) => {
 			firstName: req.user.first_name,
 			lastName: req.user.last_name,
 			address: address_record?.address ?? null,
-			profile_pic: req.user.profile_pic,
+			profile_pic: fetchProfilePic(req.user),
 		},
 		message: "Profile fetched successfully",
 	});
@@ -181,7 +186,9 @@ export const updateProfile = asyncWrapper(async (req, res) => {
 		try {
 			await updateAddress(req.user, address);
 		} catch (error) {
-			return res.status(400).json({ success: true, message: error.message });
+			return res
+				.status(400)
+				.json({ success: true, message: error.message });
 		}
 	}
 	return res

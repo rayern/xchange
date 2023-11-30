@@ -1,43 +1,38 @@
-import APIError from "../errors/APIError.js";
-import BaseModel from "../helpers/BaseModel.js";
+import pool from "../helpers/pool.js";
 import "dotenv/config";
 
-class User extends BaseModel {
-	constructor() {
-		super()
-		this.table = "users"
-	}
+export const createUser = async ({
+	email,
+	first_name,
+	last_name,
+	role_id,
+	firebase_id,
+}) => {
+	const params = {
+		sql: "call AddUser(?, ?, ?, ?, ?)",
+		timeout: 30000, // 30s
+		values: [first_name, last_name, firebase_id, email, role_id],
+	};
+	const [rows] = await pool.query(params);
+	return rows[0]
+};
 
-	async create({ email, first_name, last_name, role_id, firebase_id }) {
-		const status = await this.callProcedure("addUser", [
-			first_name,
-			last_name,
-			firebase_id,
-			email,
-			role_id,
-		]);
-		if (!status) {
-			throw new APIError(
-				"User creation has failed. Please try again",
-				400
-			);
-		}
-		return status;
-	}
-
-	async update({
-		id,
-		email = null,
-		first_name = null,
-		last_name = null,
-		profile_pic = null,
-		role_id = null,
-		firebase_id = null,
-		first_login = null,
-		last_login = null,
-		is_active = null,
-	}) {
-		const status = await this.callProcedure("updateUser", [
+export const updateUser = async ({
+	id,
+	email = null,
+	first_name = null,
+	last_name = null,
+	profile_pic = null,
+	role_id = null,
+	firebase_id = null,
+	first_login = null,
+	last_login = null,
+	is_active = null,
+}) => {
+	const params = {
+		sql: "call UpdateUser(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		timeout: 30000, // 30s
+		values: [
 			id,
 			first_name,
 			last_name,
@@ -48,30 +43,60 @@ class User extends BaseModel {
 			first_login,
 			last_login,
 			is_active,
-		]);
-		if (!status) {
-			throw new APIError(
-				"User updation has failed. Please try again",
-				400
-			);
-		}
-		return status;
-	}
+		],
+	};
+	pool.query(params);
+};
 
-	async getByFirebaseId(firebase_id){
-		const rows = await this.runSQL(
-			`SELECT * FROM ${this.table} WHERE firebase_id = ?`,
-			firebase_id
-		);
-		return rows[0];
-	}
+export const getUserByFirebaseId = async (firebase_id) => {
+	const params = {
+		sql: "SELECT * FROM Users WHERE firebase_id = ?",
+		timeout: 30000, // 30s
+		values: [firebase_id],
+	};
+	const [rows] = await pool.query(params);
+	return rows[0]
+};
 
-	async fetchProfilePic(user){
-		if(user.profile_pic == ''){
-			user.profile_pic = process.env.API_URL
-		}
-		return user.profile_pic
-	}
-}
+export const getUserById = async (id) => {
+	const params = {
+		sql: "SELECT * FROM Users WHERE id = ?",
+		timeout: 30000, // 30s
+		values: [id],
+	};
+	const [rows] = await pool.query(params);
+	return rows[0]
+};
 
-export default User
+export const upsertPasswordReset = async ({
+	id = null,
+	user_id = null,
+	is_used = null,
+}) => {
+	const params = {
+		sql: "call UpsertPasswordReset(?, ?, ?, @passwordResetId)",
+		timeout: 30000, // 30s
+		values: [
+			id,
+			user_id,
+			is_used,
+		],
+	};
+	const [rows] = await pool.query(params);
+	return rows[0]
+};
+export const getPasswordResetById = async (id) => {
+	const params = {
+		sql: "SELECT * FROM PasswordReset WHERE id = ?",
+		timeout: 30000, // 30s
+		values: [id],
+	};
+	const [rows] = await pool.query(params);
+	return rows[0]
+};
+
+export const fetchProfilePic = async (user) => {
+	if (user.profile_pic == "") {
+	}
+	return user.profile_pic;
+};

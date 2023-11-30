@@ -1,4 +1,3 @@
-import User from "../models/UserModel.js";
 import asyncWrapper from "../middleware/async.js";
 import APIError from "../errors/apiError.js";
 import AuthErrorfrom from "../errors/authError.js";

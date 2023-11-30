@@ -1,6 +1,5 @@
 import APIError from "../errors/APIError.js"
 import AuthError from "../errors/AuthError.js"
-import Log from "../models/LogModel.js"
 import logger from "../helpers/logger.js"
 const errorHandler = async (err, req, res, next) => {
 	if (err instanceof AuthError) {
