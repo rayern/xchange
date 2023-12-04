@@ -8,7 +8,7 @@ export const getAllItems = async (fromIdx) => {
 
 export const handleNewItem = async (user, item) => {
     if (user === undefined || item === undefined) {
-        throw new Error("user or item undefined");
+        throw new Error("User or item undefined");
     }
 
     let existingImages = new Set();
