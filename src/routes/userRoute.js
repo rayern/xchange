@@ -24,7 +24,10 @@ router.post("/reset-password", resetPassword);
 router.get("/validate-code/:code", validateCode);
 router.get("/profile", getProfile);
 router.post("/profile", updateProfile);
+router.patch("/:userId/profile", updateProfile);
 
+router.patch("/:userId/profile/picture", updateProfilePic);
+router.patch("/:userId/profile/address", updateProfileAddress);
 router.post("/profile/picture", updateProfilePic);
 router.post("/profile/address", updateProfileAddress);
 router.get("/logout", logout);

@@ -19,7 +19,9 @@ export const getAll = async (req, res) => {
 
 export const addNew = async (req, res) => {
     let item = req.body;
-
+    if(req.params.itemId){
+        item.id = req.params.itemId
+    }
     handleNewItem(req.user, item)
         .then((data) => {
             return res
@@ -31,7 +33,6 @@ export const addNew = async (req, res) => {
             return res
                 .status(500)
                 .json({success: false, message: error})
-            // TODO: log it
         });
 
 };

@@ -97,6 +97,7 @@ export const getPasswordResetById = async (id) => {
 
 export const fetchProfilePic = async (user) => {
 	if (user.profile_pic == "") {
+		user.profile_pic = 'common/blank-profile-picture.png'
 	}
-	return user.profile_pic;
+	return 'https://' + process.env.AWS_BUCKET + '.s3.' + process.env.AWS_REGION + '.amazonaws.com/' + user.profile_pic;
 };

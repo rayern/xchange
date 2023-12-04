@@ -165,18 +165,19 @@ export const getProfile = asyncWrapper(async (req, res) => {
 
 export const updateProfile = asyncWrapper(async (req, res) => {
 	const { firstName, lastName, address, profilePic } = req.body;
+	const user = req.params.userId ? getUserById(req.params.userId) : req.user;
 	let profile_pic = null;
 	if (profilePic) {
-		profile_pic = req.user.id + "/" + profilePic.filename;
+		profile_pic = user.id + "/" + profilePic.filename;
 		await uploadImage(
-			req.user.id,
+			user.id,
 			profile_pic,
 			profilePic.type,
 			profilePic.base64
 		);
 	}
-	const id = req.user.id;
-	userModel.update({
+	const id = user.id;
+	updateUser({
 		id,
 		first_name: firstName,
 		last_name: lastName,
@@ -201,7 +202,7 @@ export const updateProfilePic = asyncWrapper(async (req, res) => {
 	profile_pic = req.user.id + "/" + filename;
 	await uploadImage(req.user.id, profile_pic, type, base64);
 	const id = req.user.id;
-	userModel.update({
+	updateUser({
 		id,
 		profile_pic,
 	});
