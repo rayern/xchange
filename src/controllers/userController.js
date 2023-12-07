@@ -156,7 +156,7 @@ export const getProfile = asyncWrapper(async (req, res) => {
 		data: {
 			firstName: req.user.first_name,
 			lastName: req.user.last_name,
-			address: address_record?.address ?? null,
+			address: address_record ? address_record.address : null,
 			profile_pic: fetchProfilePic(req.user),
 		},
 		message: "Profile fetched successfully",
