@@ -4,7 +4,7 @@ import AuthError from "../errors/AuthError.js";
 import "dotenv/config";
 import asyncWrapper from "../middleware/async.js";
 import FirebaseWrapper from "../helpers/FirebaseWrapper.js";
-import config from "../config/appConfig.cjs";
+const config = require("../config/appConfig.cjs");
 
 const auth = asyncWrapper(async (req, res, next) => {
 	if (!req.cookies[config.cookie.name]) {

@@ -16,10 +16,11 @@ import "dotenv/config";
 import FirebaseWrapper from "../helpers/FirebaseWrapper.js";
 import { sendEmail } from "../helpers/Emailer.js";
 import { encrypt, decrypt } from "../helpers/Encryptor.js";
-import config from "../config/appConfig.cjs";
 import { uploadImage } from "../service/s3Service.js";
 
+const config = require("../config/appConfig.cjs");
 const firebase = new FirebaseWrapper();
+
 export const login = asyncWrapper(async (req, res) => {
 	const { token } = req.body;
 	const firebaseData = await firebase.verifyToken(token);
