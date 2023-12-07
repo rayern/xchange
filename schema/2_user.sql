@@ -85,10 +85,15 @@ DELIMITER $$
 CREATE PROCEDURE UpsertAddress(
     IN p_user_id INT,
     IN p_address JSON,
+    IN p_latitude DECIMAL(9,6),
+    IN p_longitude DECIMAL(9,6),
     OUT op_address_id INT
 )
 BEGIN
     DECLARE l_address_id INT;
+    DECLARE point_geometry POINT;
+
+    SET point_geometry = ST_GeomFromText(CONCAT('POINT(', p_latitude, ' ', p_longitude, ')'));
 
     SELECT a.id INTO l_address_id
     FROM Address AS a
@@ -97,7 +102,7 @@ BEGIN
 
     IF l_address_id IS NULL THEN
         -- Insert a row
-        INSERT INTO Address (address) VALUES (p_address);
+        INSERT INTO Address (address, location) VALUES (p_address, point_geometry);
 
         -- Get address id
         SET l_address_id = LAST_INSERT_ID();
@@ -106,7 +111,7 @@ BEGIN
         INSERT INTO UserAddress (user_id, address_id) VALUES (p_user_id, l_address_id);
     ELSE
         -- Update address
-        UPDATE Address SET address = p_address WHERE id = l_address_id;
+        UPDATE Address SET address = p_address, location = point_geometry WHERE id = l_address_id;
     END IF;
 
     -- Set the output parameter
