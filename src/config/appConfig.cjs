@@ -1,4 +1,4 @@
-const config = {
+module.exports = {
     app:{
         name: 'AuthBase'
     },
@@ -17,4 +17,3 @@ const config = {
 		},
 	},
 };
-module.exports = config
