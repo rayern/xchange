@@ -4,6 +4,9 @@
   "description": "",
   "main": "app.js",
   "type": "module",
+  "engine": {
+    "node": "18.17.1"
+  },
   "scripts": {
     "dev": "npx nodemon src/app.js",
     "build": "npm run clean && npm run build-babel",
