@@ -13,10 +13,12 @@ export const getAddressByUserId = async (user) => {
 
 export const updateAddress = async (user, address) => {
 	const { latitude, longitude } = await fetchLatLon(address);
+	address.latitude = latitude
+	address.longitude = longitude
 	const params = {
 		sql: "call UpsertAddress(?, ?, @addressId)",
 		timeout: 30000, // 30s
-		values: [user.id, JSON.stringify({latitude, longitude, ...address})],
+		values: [user.id, JSON.stringify(address)],
 	};
 	pool.query(params)
 };

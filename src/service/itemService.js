@@ -1,6 +1,6 @@
 import APIError from "../errors/apiError.js";
 import {listImages, uploadImage} from "./s3Service.js";
-import {fetchItems, saveNewItem} from "../models/itemModel.js";
+import {fetchItems, saveNewItem} from "../models/ItemModel.js";
 
 export const getAllItems = async (fromIdx) => {
     return fetchItems(fromIdx);
