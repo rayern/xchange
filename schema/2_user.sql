@@ -1,3 +1,40 @@
+CREATE TABLE `Users` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `first_name` varchar(255) DEFAULT NULL,
+  `last_name` varchar(255) DEFAULT NULL,
+  `firebase_id` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT \'1\',
+  `first_login` datetime DEFAULT NULL,
+  `last_login` datetime DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `role_id` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `firebase_id` (`firebase_id`),
+  UNIQUE KEY `email` (`email`),
+  KEY `role_id` (`role_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=33 DEFAULT CHARSET=utf8mb3
+
+CREATE TABLE `Roles` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) DEFAULT NULL,
+  `is_default` tinyint(1) NOT NULL DEFAULT \'0\',
+  `is_active` tinyint(1) NOT NULL DEFAULT \'1\',
+  `created_at` datetime NOT NULL,
+  `updated_at` datetime NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb3
+
+CREATE TABLE `PasswordReset` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `is_used` tinyint(1) NOT NULL DEFAULT \'0\',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb3
+
 DROP PROCEDURE IF EXISTS AddUser;
 DELIMITER $$
 CREATE PROCEDURE AddUser (
@@ -78,46 +115,6 @@ BEGIN
     END IF;
 
 END $$
-DELIMITER ;
-
-DROP PROCEDURE IF EXISTS UpsertAddress;
-DELIMITER $$
-CREATE PROCEDURE UpsertAddress(
-    IN p_user_id INT,
-    IN p_address JSON,
-    IN p_latitude DECIMAL(9,6),
-    IN p_longitude DECIMAL(9,6),
-    OUT op_address_id INT
-)
-BEGIN
-    DECLARE l_address_id INT;
-    DECLARE point_geometry POINT;
-
-    SET point_geometry = ST_GeomFromText(CONCAT('POINT(', p_latitude, ' ', p_longitude, ')'));
-
-    SELECT a.id INTO l_address_id
-    FROM Address AS a
-    LEFT JOIN UserAddress AS u ON a.id = u.address_id
-    WHERE u.user_id = p_user_id AND a.active = 1;
-
-    IF l_address_id IS NULL THEN
-        -- Insert a row
-        INSERT INTO Address (address, location) VALUES (p_address, point_geometry);
-
-        -- Get address id
-        SET l_address_id = LAST_INSERT_ID();
-
-        -- Insert user address relation
-        INSERT INTO UserAddress (user_id, address_id) VALUES (p_user_id, l_address_id);
-    ELSE
-        -- Update address
-        UPDATE Address SET address = p_address, location = point_geometry WHERE id = l_address_id;
-    END IF;
-
-    -- Set the output parameter
-    SET op_address_id = l_address_id;
-
-END$$
 DELIMITER ;
 
 DROP PROCEDURE IF EXISTS UpsertPasswordReset;
