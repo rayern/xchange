@@ -35,5 +35,11 @@ app.use(errorHandler);
 
 app.listen(PORT, () => {
 	loadEnums();
+	const interval = setInterval(loadEnums, 10000);
 	console.log(`Server is running on port ${PORT}`);
+});
+
+process.on("SIGINT", () => {
+	clearInterval(interval);
+	process.exit();
 });
