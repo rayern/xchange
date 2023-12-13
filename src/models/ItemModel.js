@@ -9,7 +9,7 @@ export const fetchItems = async (startIdx, user) => {
         const address = await getAddressByUser(user)
 		params = {
 			sql: 
-				"select item_data, owner_id from Items i, ItemOwner o, Address a, UserAddress ua where i.id = o.item_id and o.owner_id = ua.user_id and ua.address_id = a.id and ST_Distance(a.location, Point(?, ?)) <= ? order by o.updated desc limit ?",
+				"select item_data, owner_id from Items i, ItemOwner o, Address a, UserAddress ua where i.id = o.item_id and o.owner_id = ua.user_id and ua.address_id = a.id and ST_Distance(a.location, Point(?, ?)) <= ? order by o.updated desc limit ?,18446744073709551615",
 			timeout: 30000, // 30s
 			values: [address.location.x, address.location.y, 10000, idx],
 		};
@@ -17,7 +17,7 @@ export const fetchItems = async (startIdx, user) => {
 		params = {
 			sql:
 				"select item_data, owner_id from Items i, ItemOwner o where i.id = o.item_id " +
-				"order by o.updated desc limit ?",
+				"order by o.updated desc limit ?, 18446744073709551615",
 			timeout: 30000, // 30s
 			values: [idx],
 		};
