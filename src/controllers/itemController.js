@@ -1,10 +1,10 @@
-import asyncWrapper from "../middleware/async.js";
-import APIError from "../errors/apiError.js";
-import AuthErrorfrom from "../errors/authError.js";
 import {getAllItems, handleNewItem} from "../service/itemService.js";
+import {getLoggedInUser} from "../helpers/utils.js"
+import asyncWrapper from "../middleware/async.js";
 
-export const getAll = async (req, res) => {
-    await getAllItems(req.params.startIdx)
+export const getAll = asyncWrapper(async (req, res) => {
+    const user = await getLoggedInUser(req)
+    await getAllItems(req.params.startIdx, user)
         .then((data) => {
             return res
                 .status(200)
@@ -15,9 +15,9 @@ export const getAll = async (req, res) => {
                 .status(500)
                 .json({success: false, message: err});
         })
-};
+});
 
-export const addNew = async (req, res) => {
+export const addNew = asyncWrapper(async (req, res) => {
     let item = req.body;
     if(req.params.itemId){
         item.id = req.params.itemId
@@ -35,5 +35,5 @@ export const addNew = async (req, res) => {
                 .json({success: false, message: error})
         });
 
-};
+});
 

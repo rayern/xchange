@@ -1,7 +1,7 @@
 import pool from "../helpers/pool.js";
 import { fetchLatLon } from "../service/smartyStreetsService.js";
 
-export const getAddressByUserId = async (user) => {
+export const getAddressByUser = async (user) => {
 	const params = {
 		sql: "SELECT a.* FROM Address as a left join UserAddress as u on a.id = u.address_id WHERE u.user_id = ? and a.active = 1",
 		timeout: 30000, // 30s
