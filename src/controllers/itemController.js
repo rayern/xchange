@@ -4,16 +4,16 @@ import asyncWrapper from "../middleware/async.js";
 
 export const getAll = asyncWrapper(async (req, res) => {
     const user = await getLoggedInUser(req)
-    await getAllItems(req.params.startIdx, user)
+    getAllItems(req.params.startIdx, user)
         .then((data) => {
             return res
                 .status(200)
-                .json({success: true, data: data[0], message: ""});
+                .json({success: true, data: data[0], message: "Items fetched successfully"});
         })
         .catch((err) => {
             return res
                 .status(500)
-                .json({success: false, message: err});
+                .json({success: false, message: err.message});
         })
 });
 

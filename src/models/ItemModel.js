@@ -2,18 +2,19 @@ import pool from "../helpers/pool.js";
 import { getAddressByUser } from "./AddressModel.js";
 
 
-export const fetchItems = async (startIdx, user = null) => {
+export const fetchItems = async (startIdx, user) => {
 	let idx = startIdx === undefined || isNaN(startIdx) ? 0 : Number(startIdx);
+	let params = null
 	if (user) {
         const address = await getAddressByUser(user)
-		const params = {
+		params = {
 			sql: 
 				"select item_data, owner_id from Items i, ItemOwner o, Address a, UserAddress ua where i.id = o.item_id and o.owner_id = ua.user_id and ua.address_id = a.id and ST_Distance(a.location, Point(?, ?)) <= ? order by o.updated desc limit ?",
 			timeout: 30000, // 30s
 			values: [address.location.x, address.location.y, 10000, idx],
 		};
 	} else {
-		const params = {
+		params = {
 			sql:
 				"select item_data, owner_id from Items i, ItemOwner o where i.id = o.item_id " +
 				"order by o.updated desc limit ?",
