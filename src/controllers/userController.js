@@ -8,7 +8,7 @@ import {
 	upsertPasswordReset,
 	getPasswordResetById,
 } from "../models/UserModel.js";
-import { getAddressByUserId, updateAddress } from "../models/AddressModel.js";
+import { getAddressByUser, updateAddress } from "../models/AddressModel.js";
 import asyncWrapper from "../middleware/async.js";
 import APIError from "../errors/APIError.js";
 import AuthError from "../errors/AuthError.js";
@@ -151,7 +151,7 @@ export const logout = asyncWrapper(async (req, res) => {
 });
 
 export const getProfile = asyncWrapper(async (req, res) => {
-	const address_record = await getAddressByUserId(req.user);
+	const address_record = await getAddressByUser(req.user);
 	return res.status(200).json({
 		success: true,
 		data: {
