@@ -1,28 +1,35 @@
 import pool from "../helpers/pool.js";
-import { getAddressByUser } from "./AddressModel.js";
 
-
-export const fetchItems = async (startIdx, user) => {
-	let idx = startIdx === undefined || isNaN(startIdx) ? 0 : Number(startIdx);
-	let params = null
-	if (user) {
-        const address = await getAddressByUser(user)
-		params = {
-			sql: 
-				"select item_data, owner_id from Items i, ItemOwner o, Address a, UserAddress ua where i.id = o.item_id and o.owner_id = ua.user_id and ua.address_id = a.id and ST_Distance(a.location, Point(?, ?)) <= ? order by o.updated desc limit ?,18446744073709551615",
-			timeout: 30000, // 30s
-			values: [address.location.x, address.location.y, 10000, idx],
-		};
-	} else {
-		params = {
-			sql:
-				"select item_data, owner_id from Items i, ItemOwner o where i.id = o.item_id " +
-				"order by o.updated desc limit ?, 18446744073709551615",
-			timeout: 30000, // 30s
-			values: [idx],
-		};
+export const fetchItems = async ({ fromIdx, toIdx, limit, ids, userId }) => {
+	let idx = fromIdx === undefined || isNaN(fromIdx) ? 0 : Number(fromIdx);
+	let values = [];
+	let sql =
+		"select item_data, owner_id from Items i, ItemOwner o where i.id = o.item_id";
+	if (userId) {
+		sql += " and o.owner_id = ?";
+		values.push(userId);
 	}
-	return pool.query(params);
+	if (ids) {
+		const placeholders = ids.map(() => "?").join(", ");
+		sql += ` and i.id in (${placeholders})`;
+		values.push(ids.map(Number));
+	}
+	sql += " and i.id >= ?";
+	values.push(idx);
+	if (toIdx) {
+		sql += " and i.id <= ?";
+		values.push(Number(toIdx));
+	}
+	sql += " order by o.updated desc";
+	if (limit) {
+		sql += " limit ?";
+		values.push(limit);
+	}
+	return pool.query({
+		sql: sql,
+		timeout: 30000, // 30s
+		values: values,
+	});
 };
 
 export const saveNewItem = async (owner, item) => {
