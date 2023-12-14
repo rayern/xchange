@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "npx nodemon src/app.js",
-    "build": "npm run clean && npm run build-babel",
+    "build": "npm run clean && npm run build-babel && cp -R src/config build/",
     "start": "npm run build && node ./build/app.js",
     "clean": "rm -rf build && mkdir build",
     "build-babel": "babel -d ./build ./src -s",
