@@ -5,13 +5,13 @@ export const createUser = async ({
 	email,
 	first_name,
 	last_name,
-	role_id,
+	role,
 	firebase_id,
 }) => {
 	const params = {
 		sql: "call AddUser(?, ?, ?, ?, ?)",
 		timeout: 30000, // 30s
-		values: [first_name, last_name, firebase_id, email, role_id],
+		values: [first_name, last_name, firebase_id, email, role],
 	};
 	const [rows] = await pool.query(params);
 	return rows[0]

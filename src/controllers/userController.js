@@ -61,7 +61,7 @@ export const signup = asyncWrapper(async (req, res) => {
 		email: firebaseData.email,
 		first_name: firstName,
 		last_name: lastName,
-		role_id: role,
+		role: role,
 		firebase_id: firebaseData.id,
 	});
 	return res.status(200).json({
