@@ -50,7 +50,7 @@ BEGIN
     -- Get role ID
     SELECT id INTO l_role_id
     FROM Roles 
-    WHERE name = p_role AND active = 1;
+    WHERE name = lower(p_role) AND is_active = 1;
 
     -- Check if role exists
     IF l_role_id IS NOT NULL THEN

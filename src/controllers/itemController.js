@@ -12,7 +12,10 @@ export const getAll = asyncWrapper(async (req, res) => {
 	if (req.body.userId) {
 		userId = req.body.userId;
 	} else {
-		userId = await getLoggedInUser(req).id;
+		const user = await getLoggedInUser(req);
+		if(user){
+			userId = user.id
+		}
 	}
 	getAllItems(req.params.startIdx, userId)
 		.then((data) => {

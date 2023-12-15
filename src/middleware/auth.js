@@ -7,19 +7,28 @@ import FirebaseWrapper from "../helpers/FirebaseWrapper.js";
 import config from "../config/appConfig.cjs";
 
 const auth = asyncWrapper(async (req, res, next) => {
-	if (!req.cookies[config.cookie.name]) {
-		throw new AuthError("Unauthorized", 403);
-	}
 	try {
+		let jwtToken = null
+		const authHeader = req.headers["authorization"];
+		if (authHeader) {
+			let [bearer, authToken] = authHeader.split(" ");
+			if (bearer !== "Bearer" || !authToken) {
+				throw new AuthError("Unauthorized", 403);
+			}
+			jwtToken = authToken
+		} else {
+			if (req.cookies[config.cookie.name]) {
+				jwtToken = req.cookies[config.cookie.name];
+			}
+		}
 		const { token, role } = jwt.verify(
-			req.cookies[config.cookie.name],
+			jwtToken,
 			process.env.JWT_SECRET
 		);
 		const firebase = new FirebaseWrapper();
 		const firebaseData = await firebase.verifyToken(token);
 		req.user = await getUserByFirebaseId(firebaseData.id);
 	} catch (error) {
-		console.log(error);
 		throw new AuthError("Unauthorized", 403);
 	}
 	if (req.user == null) {
