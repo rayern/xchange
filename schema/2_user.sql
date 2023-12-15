@@ -14,7 +14,7 @@ CREATE TABLE `Users` (
   UNIQUE KEY `firebase_id` (`firebase_id`),
   UNIQUE KEY `email` (`email`),
   KEY `role_id` (`role_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=33 DEFAULT CHARSET=utf8mb3
+) ENGINE=InnoDB AUTO_INCREMENT=33 DEFAULT CHARSET=utf8mb3;
 
 CREATE TABLE `Roles` (
   `id` int NOT NULL AUTO_INCREMENT,
@@ -24,7 +24,7 @@ CREATE TABLE `Roles` (
   `created_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb3
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb3;
 
 CREATE TABLE `PasswordReset` (
   `id` int NOT NULL AUTO_INCREMENT,
@@ -33,7 +33,7 @@ CREATE TABLE `PasswordReset` (
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb3
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb3;
 
 DROP PROCEDURE IF EXISTS AddUser;
 DELIMITER $$
@@ -42,18 +42,35 @@ CREATE PROCEDURE AddUser (
     IN p_last_name VARCHAR(255),
     IN p_firebase_id VARCHAR(255),
     IN p_email VARCHAR(255),
-    IN p_role_id INT(11)
+    IN p_role VARCHAR(255)
 )
 BEGIN 
-    IF NOT EXISTS (SELECT * FROM `Users` WHERE firebase_id = p_firebase_id) THEN 
-        INSERT INTO `Users` (first_name, last_name, firebase_id, email, role_id) 
-        VALUES (p_first_name, p_last_name, p_firebase_id, p_email, p_role_id);
-        SELECT * FROM `Users` WHERE firebase_id = p_firebase_id;
+    DECLARE l_role_id INT;
+
+    -- Get role ID
+    SELECT id INTO l_role_id
+    FROM Roles 
+    WHERE name = p_role AND active = 1;
+
+    -- Check if role exists
+    IF l_role_id IS NOT NULL THEN
+        -- Check if user already exists
+        IF NOT EXISTS (SELECT * FROM `Users` WHERE firebase_id = p_firebase_id) THEN 
+            -- Insert new user
+            INSERT INTO `Users` (first_name, last_name, firebase_id, email, role_id) 
+            VALUES (p_first_name, p_last_name, p_firebase_id, p_email, l_role_id);
+            SELECT * FROM `Users` WHERE firebase_id = p_firebase_id;
+        ELSE
+            -- User already exists
+            SELECT 1 as error, 403 as statusCode, 'User already exists' as message;
+        END IF;
     ELSE
-        SELECT 1 as error, 403 as statusCode, 'User already exists' as message;
+        -- Role not found or not active
+        SELECT 1 as error, 404 as statusCode, 'Role not found or not active' as message;
     END IF;
 END $$
 DELIMITER ;
+
 
 DROP PROCEDURE IF EXISTS UpdateUser;
 DELIMITER $$
