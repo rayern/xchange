@@ -203,7 +203,7 @@ export const updateProfile = asyncWrapper(async (req, res) => {
 
 export const updateProfilePic = asyncWrapper(async (req, res) => {
 	const { filename, type, base64 } = req.body;
-	profile_pic = req.user.id + "/" + filename;
+	let profile_pic = req.user.id + "/" + filename;
 	await uploadImage(req.user.id, profile_pic, type, base64);
 	const id = req.user.id;
 	updateUser({
