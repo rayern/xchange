@@ -64,6 +64,9 @@ export const signup = asyncWrapper(async (req, res) => {
 		role: role,
 		firebase_id: firebaseData.id,
 	});
+	if(user[0].error){
+		throw new APIError(user[0].message, user[0].statusCode);
+	}
 	return res.status(200).json({
 		success: true,
 		data: user,
